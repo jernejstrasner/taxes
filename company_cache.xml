@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<company_cache>
+  <company symbol="AAPL:xnas">
+    <name>Apple Inc.</name>
+    <address>1 Apple Park Way, Cupertino, CA 95014</address>
+    <isin>US0378331005</isin>
+  </company>
+  <company symbol="CVX:xnys">
+    <name>Chevron Corp.</name>
+    <address>6001 Bollinger Canyon Road San Ramon, CA 94583</address>
+    <isin>US1667641005</isin>
+  </company>
+  <company symbol="EA:xnas">
+    <name>Electronic Arts</name>
+    <address>209 Redwood Shores Parkway, Redwood City, CA 94065</address>
+    <isin>US2855121099</isin>
+  </company>
+  <company symbol="VGK:arcx">
+    <name>Vanguard FTSE Europe ETF</name>
+    <address>100 Vanguard Boulevard, Malvern, PA, 19355</address>
+    <isin>US9220428745</isin>
+  </company>
+  <company symbol="NVDA:xnas">
+    <name>NVIDIA Corp.</name>
+    <address>2788 San Tomas Expressway, Santa Clara, CA 95051</address>
+    <isin>US67066G1040</isin>
+  </company>
+  <company symbol="AVGO:xnas">
+    <name>Broadcom Inc.</name>
+    <address>1320 Ridder Park Drive, San Jose, CA 95131</address>
+    <isin>US11135F1012</isin>
+  </company>
+  <company symbol="C:xnys">
+    <name>Citigroup Inc.</name>
+    <address>388 Greenwich Street, 17th Floor, NY 10013</address>
+    <isin>US1729674242</isin>
+  </company>
+  <company symbol="MSFT:xnas">
+    <name>Microsoft Corp.</name>
+    <address>1 Microsoft Way, Redmond, WA 98052</address>
+    <isin>US5949181045</isin>
+  </company>
+  <company symbol="ASML:xams">
+    <name>ASML Holding NV</name>
+    <address>De Run 6501, 5504 DR, Veldhoven</address>
+    <isin>NL0010273215</isin>
+  </company>
+  <company symbol="FRC:xnys">
+    <isin>US33616C1009</isin>
+  </company>
+</company_cache>

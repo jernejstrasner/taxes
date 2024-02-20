@@ -1,0 +1,15 @@
+<taxpayer>
+    <taxNumber>12345678</taxNumber>
+    <taxpayerType>FO</taxpayerType>
+    <name>JANEZ NOVAK</name>
+    <address>ULICA 1A</address>
+    <city>LJUBLJANA</city>
+    <postNumber>1000</postNumber>
+    <postName>LJUBLJANA</postName>
+    <email>janez.novak@gmail.com</email>
+    <phone>040123456</phone>
+    <country>SI</country>
+    <isResident>true</isResident>
+    <selfReport>false</selfReport>
+    <wfTypeU>false</wfTypeU>
+</taxpayer>
