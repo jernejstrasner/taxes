@@ -2,3 +2,4 @@ pandas
 openpyxl
 lxml
 pyarrow
+yfinance[nospam] @ git+https://github.com/jernejstrasner/yfinance.git@jernej/fix-warning

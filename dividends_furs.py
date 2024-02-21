@@ -6,6 +6,7 @@ from lxml.builder import ElementMaker
 import currency
 from cache import Cache
 import argparse
+from finance import FinanceData
 
 class XMLNamespaces:
     main = "http://edavki.durs.si/Documents/Schemas/Doh_Div_3.xsd"
@@ -128,6 +129,10 @@ furs_df["PayerCountry"] = None
 # Get the exchange rate for the dates in the Date column
 exchange_rates = currency.get_currency(furs_df["Date"].unique())
 
+finance_data = FinanceData(cache)
+symbols = furs_df["Symbol"].unique()
+finance_data.fetch_info(symbols)
+
 def process_row(row):
     # Dividend amount
     if row["Value"].startswith("USD"):
@@ -149,9 +154,9 @@ def process_row(row):
         sys.exit(1)
     # Payer identification number
     if not row["PayerIdentificationNumber"]:
-        isin = cache.get_isin(row["Symbol"])
+        isin = finance_data.get_isin(row["Symbol"])
         if not isin:
-            isin = input("Enter the payer identification number for {}: ".format(row["PayerName"]))
+            isin = input("Enter the ISIN for {}: ".format(row["PayerName"]))
             cache.set_isin(row["Symbol"], isin)
         row["PayerIdentificationNumber"] = isin
     # Payer country
@@ -159,7 +164,7 @@ def process_row(row):
         row["PayerCountry"] = row["PayerIdentificationNumber"][:2]
     # Payer address
     if not row["PayerAddress"]:
-        address = cache.get_address(row["Symbol"])
+        address = finance_data.get_address(row["Symbol"])
         if not address:
             address = input("Enter the payer address for {}: ".format(row["PayerName"]))
             cache.set_address(row["Symbol"], address)
