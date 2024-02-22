@@ -81,10 +81,10 @@ def write_xml(dividends, path):
         xf.write(envelope, pretty_print=True)
         print("XML file written to dividends_furs.xml")
 
-def verify_xml():
+def verify_xml(path):
     # Verify the generated XML using an xsd schema
     schema = etree.XMLSchema(etree.parse("data/Doh_Div_3.xsd"))
-    xml = etree.parse("dividends_furs.xml")
+    xml = etree.parse(path)
     schema.assertValid(xml)
     print("XML is valid according to FURS schema")
 
@@ -190,7 +190,7 @@ furs_df = furs_df.apply(process_row, axis=1)
 
 # Write the final XML file
 write_xml(furs_df, args.output or "dividends_furs.xml")
-verify_xml()
+verify_xml(args.output or "dividends_furs.xml")
 
 # Write the caches
 cache.write_cache()
