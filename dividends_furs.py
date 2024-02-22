@@ -147,14 +147,15 @@ def process_row(row):
         print("Currency not supported: ", row["Value"])
         sys.exit(1)
     # Tax witheld at source
-    if row["ForeignTax"].startswith("-USD"):
-        value = float(row["ForeignTax"].replace("-USD", ""))
+    foreign_tax = row["ForeignTax"].lstrip(" +\-")
+    if foreign_tax.startswith("USD"):
+        value = float(foreign_tax.replace("USD", ""))
         row["ForeignTax"] = value * exchange_rates[row["Date"]]["USD"]
-    elif row["ForeignTax"].startswith("-CAD"):
-        value = float(row["ForeignTax"].replace("-CAD", ""))
+    elif foreign_tax.startswith("CAD"):
+        value = float(foreign_tax.replace("CAD", ""))
         row["ForeignTax"] = value * exchange_rates[row["Date"]]["CAD"]
-    elif row["ForeignTax"].startswith("-EUR"):
-        row["ForeignTax"] = float(row["ForeignTax"].replace("-EUR", ""))
+    elif foreign_tax.startswith("EUR"):
+        row["ForeignTax"] = float(foreign_tax.replace("EUR", ""))
     else:
         print("Currency not supported: ", row["ForeignTax"])
         sys.exit(1)
