@@ -137,7 +137,10 @@ def process_row(row):
     # Dividend amount
     if row["Value"].startswith("USD"):
         value = float(row["Value"].replace("USD", ""))
-        row["Value"] = value * exchange_rates[row["Date"]]
+        row["Value"] = value * exchange_rates[row["Date"]]["USD"]
+    elif row["Value"].startswith("CAD"):
+        value = float(row["Value"].replace("CAD", ""))
+        row["Value"] = value * exchange_rates[row["Date"]]["CAD"]
     elif row["Value"].startswith("EUR"):
         row["Value"] = float(row["Value"].replace("EUR", ""))
     else:
