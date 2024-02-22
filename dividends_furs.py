@@ -2,7 +2,7 @@ import sys
 
 import pandas as pd
 import currency
-from cache import Cache
+from cache import CompanyCache, CountryCache
 import argparse
 from finance import FinanceData
 from xml_output import XML
@@ -30,9 +30,11 @@ df = pd.read_excel(args.dividends, sheet_name="Share Dividends")
 print("Opened dividends file: ", args.dividends)
 
 # Create a cache object
-cache = Cache()
+company_cache = CompanyCache("company_cache.xml")
 if args.additional_info:
-    cache.fill_isin_cache(args.additional_info)
+    company_cache.fill_isin_cache(args.additional_info)
+    company_cache.flush()
+country_cache = CountryCache("country_cache.xml")
 
 # Rename the columns
 furs_df = df.rename(
@@ -59,7 +61,7 @@ furs_df["PayerCountry"] = None
 # Get the exchange rate for the dates in the Date column
 exchange_rates = currency.get_currency(furs_df["Date"].unique())
 
-finance_data = FinanceData(cache)
+finance_data = FinanceData(company_cache)
 symbols = furs_df["Symbol"].unique()
 finance_data.fetch_info(symbols)
 
@@ -95,7 +97,7 @@ def process_row(row):
         isin = finance_data.get_isin(row["Symbol"])
         if not isin:
             isin = input("Enter the ISIN for {}: ".format(row["PayerName"]))
-            cache.set_isin(row["Symbol"], isin)
+            company_cache.set_isin(row["Symbol"], isin)
         row["PayerIdentificationNumber"] = isin
     # Payer country
     if not row["PayerCountry"]:
@@ -105,19 +107,22 @@ def process_row(row):
         address = finance_data.get_address(row["Symbol"])
         if not address:
             address = input("Enter the payer address for {}: ".format(row["PayerName"]))
-            cache.set_address(row["Symbol"], address)
+            company_cache.set_address(row["Symbol"], address)
         row["PayerAddress"] = address
     # Relief statement
     if not row["ReliefStatement"]:
-        statement = cache.get_relief_statement(row["PayerCountry"])
+        statement = country_cache.get_relief_statement(row["PayerCountry"])
         if not statement:
             statement = input(
                 "Enter the relief statement for country {}: ".format(
                     row["PayerCountry"]
                 )
             )
-            cache.set_relief_statement(row["PayerCountry"], statement)
+            country_cache.set_relief_statement(row["PayerCountry"], statement)
         row["ReliefStatement"] = statement
+    # Flush the caches for each rown
+    company_cache.flush()
+    country_cache.flush()
     return row
 
 
@@ -130,4 +135,5 @@ xml.write()
 xml.verify("data/Doh_Div_3.xsd")
 
 # Write the caches
-cache.write_cache()
+company_cache.flush()
+country_cache.flush()

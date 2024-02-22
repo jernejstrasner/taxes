@@ -1,42 +1,42 @@
 <?xml version='1.0' encoding='utf-8'?>
-<company_cache>
-  <company symbol="AVGO:xnas">
+<cache>
+  <item id="AVGO:xnas">
     <isin>US11135F1012</isin>
     <address>3421 Hillview Ave, Palo Alto, CA, 94304</address>
-  </company>
-  <company symbol="NVDA:xnas">
+  </item>
+  <item id="NVDA:xnas">
     <isin>US67066G1040</isin>
     <address>2788 San Tomas Expressway, Santa Clara, CA, 95051</address>
-  </company>
-  <company symbol="MSFT:xnas">
+  </item>
+  <item id="MSFT:xnas">
     <isin>US5949181045</isin>
     <address>One Microsoft Way, Redmond, WA, 98052-6399</address>
-  </company>
-  <company symbol="CVX:xnys">
+  </item>
+  <item id="CVX:xnys">
     <isin>US1667641005</isin>
     <address>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</address>
-  </company>
-  <company symbol="C:xnys">
+  </item>
+  <item id="C:xnys">
     <isin>US1729674242</isin>
     <address>388 Greenwich Street, New York, NY, 10013</address>
-  </company>
-  <company symbol="AAPL:xnas">
+  </item>
+  <item id="AAPL:xnas">
     <isin>US0378331005</isin>
     <address>One Apple Park Way, Cupertino, CA, 95014</address>
-  </company>
-  <company symbol="ASML:xams">
+  </item>
+  <item id="ASML:xams">
     <isin>NL0010273215</isin>
     <address>De Run 6501, Veldhoven, 5504 DR</address>
-  </company>
-  <company symbol="EA:xnas">
+  </item>
+  <item id="EA:xnas">
     <isin>US2855121099</isin>
     <address>209 Redwood Shores Parkway, Redwood City, CA, 94065</address>
-  </company>
-  <company symbol="VGK:arcx">
+  </item>
+  <item id="VGK:arcx">
     <isin>US9220428745</isin>
     <address>100 Vanguard Boulevard, Malvern, PA, 19355</address>
-  </company>
-  <company symbol="FRC:xnys">
+  </item>
+  <item id="FRC:xnys">
     <isin>US33616C1009</isin>
-  </company>
-</company_cache>
+  </item>
+</cache>

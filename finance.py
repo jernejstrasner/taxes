@@ -1,8 +1,9 @@
 import yfinance as yf
+from cache import CompanyCache
 
 
 class FinanceData:
-    def __init__(self, cache):
+    def __init__(self, cache: CompanyCache):
         self.cache = cache
 
     def fetch_info(self, symbols):

@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<country_cache>
-  <country code="US">
+<cache>
+  <item id="US">
     <relief_statement>Številka 10/01 (1, 10)</relief_statement>
-  </country>
-  <country code="NL">
+  </item>
+  <item id="NL">
     <relief_statement>Številka 4/05 (1, 10)</relief_statement>
-  </country>
-</country_cache>
+  </item>
+</cache>
