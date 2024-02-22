@@ -1,92 +1,12 @@
 import sys
 
 import pandas as pd
-from lxml import etree
-from lxml.builder import ElementMaker
 import currency
 from cache import Cache
 import argparse
 from finance import FinanceData
-
-class XMLNamespaces:
-    main = "http://edavki.durs.si/Documents/Schemas/Doh_Div_3.xsd"
-    edp = "http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd"
-
-class Taxpayer:
-    def __init__(self, taxpayer_file):
-        self.taxpayer = etree.parse(taxpayer_file)
-
-    # Creates a header XML element compatible with the FURS XML schema
-    def get_header(self):
-        E = ElementMaker(namespace=XMLNamespaces.edp)
-        root = E.taxpayer(
-            E.taxNumber(self.taxpayer.findtext("taxNumber")),
-            E.taxpayerType("FO"),
-            E.name(self.taxpayer.findtext("name")),
-            E.address1(self.taxpayer.findtext("address")),
-            E.city(self.taxpayer.findtext("city")),
-            E.postNumber(self.taxpayer.findtext("postNumber")),
-            E.postName(self.taxpayer.findtext("postName"))
-        )
-        return root
-
-    # Creates the first body element Doh_Div compatible with the FURS XML schema
-    def get_doh_div(self):
-        E = ElementMaker()
-        root = E.Doh_Div(
-            E.Period(str(pd.Timestamp.now().year - 1)),
-            E.EmailAddress(self.taxpayer.findtext("email")),
-            E.PhoneNumber(self.taxpayer.findtext("phone")),
-            E.ResidentCountry("SI"),
-            E.IsResident("true"),
-            E.SelfReport("false"),
-            E.WfTypeU("false"),
-        )
-        return root
-
-def write_xml(dividends, path):
-    # Write the xml to a file pretty printed with an xml declaration
-    with etree.xmlfile(path, encoding="utf-8") as xf:
-        xf.write_declaration()
-        E = ElementMaker(nsmap={"edp": XMLNamespaces.edp})
-        EDP = ElementMaker(namespace=XMLNamespaces.edp)
-        envelope = E.Envelope(
-            {"xmlns": XMLNamespaces.main},
-            EDP.Header(
-                taxpayer.get_header(),
-                EDP.Workflow(
-                    EDP.DocumentWorkflowID("O"),
-                    EDP.DocumentWorkflowName(),
-                ),
-                EDP.domain("edavki.durs.si"),
-            ),
-            EDP.AttachmentList(),
-            EDP.Signatures(),
-                E.body(
-                    taxpayer.get_doh_div(),
-                    *[E.Dividend(
-                        E.Date(row.Date),
-                        E.PayerIdentificationNumber(row.PayerIdentificationNumber),
-                        E.PayerName(row.PayerName),
-                        E.PayerAddress(row.PayerAddress),
-                        E.PayerCountry(row.PayerCountry),
-                        E.Type("1"),
-                        E.Value("{:.2f}".format(row.Value)),
-                        E.ForeignTax("{:.2f}".format(row.ForeignTax)),
-                        E.SourceCountry(row.PayerCountry),
-                        E.ReliefStatement(row.ReliefStatement),
-                    ) for row in dividends.itertuples()],
-                ),
-            )
-        xf.write(envelope, pretty_print=True)
-        print("XML file written to dividends_furs.xml")
-
-def verify_xml(path):
-    # Verify the generated XML using an xsd schema
-    schema = etree.XMLSchema(etree.parse("data/Doh_Div_3.xsd"))
-    xml = etree.parse(path)
-    schema.assertValid(xml)
-    print("XML is valid according to FURS schema")
+from xml_output import XML
+from taxpayer import Taxpayer
 
 # Parse the arguments
 parser = argparse.ArgumentParser()
@@ -97,7 +17,7 @@ parser.add_argument("--output", help="Path to the output xml file", required=Fal
 args = parser.parse_args()
 
 # Load taxpayer data
-taxpayer = Taxpayer(args.taxpayer)
+taxpayer = Taxpayer.from_file(args.taxpayer)
 
 # Open dividends xlsx file
 df = pd.read_excel(args.dividends, sheet_name='Share Dividends')
@@ -189,8 +109,9 @@ def process_row(row):
 furs_df = furs_df.apply(process_row, axis=1)
 
 # Write the final XML file
-write_xml(furs_df, args.output or "dividends_furs.xml")
-verify_xml(args.output or "dividends_furs.xml")
+xml = XML(taxpayer, furs_df, args.output or "dividends_furs.xml")
+xml.write()
+xml.verify("data/Doh_Div_3.xsd")
 
 # Write the caches
 cache.write_cache()
