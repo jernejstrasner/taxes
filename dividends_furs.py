@@ -149,7 +149,10 @@ def process_row(row):
     # Tax witheld at source
     if row["ForeignTax"].startswith("-USD"):
         value = float(row["ForeignTax"].replace("-USD", ""))
-        row["ForeignTax"] = value * exchange_rates[row["Date"]]
+        row["ForeignTax"] = value * exchange_rates[row["Date"]]["USD"]
+    elif row["ForeignTax"].startswith("-CAD"):
+        value = float(row["ForeignTax"].replace("-CAD", ""))
+        row["ForeignTax"] = value * exchange_rates[row["Date"]]["CAD"]
     elif row["ForeignTax"].startswith("-EUR"):
         row["ForeignTax"] = float(row["ForeignTax"].replace("-EUR", ""))
     else:
