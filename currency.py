@@ -1,8 +1,11 @@
 from lxml import etree
 
+
 def get_currency(dates):
     results = {}
-    for event, element in etree.iterparse("data/currency.xml", tag="{http://www.bsi.si}tecajnica"):
+    for event, element in etree.iterparse(
+        "data/currency.xml", tag="{http://www.bsi.si}tecajnica"
+    ):
         date = element.attrib["datum"]
         currencies = {}
         for child in element if date in dates else []:

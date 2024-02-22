@@ -11,8 +11,14 @@ from taxpayer import Taxpayer
 # Parse the arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("dividends", help="Path to the dividends xlsx file")
-parser.add_argument("--taxpayer", help="Path to the taxpayer xml info file", required=True)
-parser.add_argument("--additional-info", help="Path to the additional info xlsx file with ISINs and addresses of the payers", required=False)
+parser.add_argument(
+    "--taxpayer", help="Path to the taxpayer xml info file", required=True
+)
+parser.add_argument(
+    "--additional-info",
+    help="Path to the additional info xlsx file with ISINs and addresses of the payers",
+    required=False,
+)
 parser.add_argument("--output", help="Path to the output xml file", required=False)
 args = parser.parse_args()
 
@@ -20,7 +26,7 @@ args = parser.parse_args()
 taxpayer = Taxpayer.from_file(args.taxpayer)
 
 # Open dividends xlsx file
-df = pd.read_excel(args.dividends, sheet_name='Share Dividends')
+df = pd.read_excel(args.dividends, sheet_name="Share Dividends")
 print("Opened dividends file: ", args.dividends)
 
 # Create a cache object
@@ -29,16 +35,20 @@ if args.additional_info:
     cache.fill_isin_cache(args.additional_info)
 
 # Rename the columns
-furs_df = df.rename(columns={
-    "Instrument": "PayerName",
-    "Pay Date": "Date",
-    "Dividend amount":"Value",
-    "Withholding tax amount": "ForeignTax",
-    "Instrument Symbol": "Symbol",
-})
+furs_df = df.rename(
+    columns={
+        "Instrument": "PayerName",
+        "Pay Date": "Date",
+        "Dividend amount": "Value",
+        "Withholding tax amount": "ForeignTax",
+        "Instrument Symbol": "Symbol",
+    }
+)
 
 # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-furs_df["Date"] = pd.to_datetime(furs_df["Date"], format="%d-%b-%Y").dt.strftime("%Y-%m-%d")
+furs_df["Date"] = pd.to_datetime(furs_df["Date"], format="%d-%b-%Y").dt.strftime(
+    "%Y-%m-%d"
+)
 
 # Add a couple more columns that are required by the FURS XML schema and set them as null
 furs_df["ReliefStatement"] = None
@@ -52,6 +62,7 @@ exchange_rates = currency.get_currency(furs_df["Date"].unique())
 finance_data = FinanceData(cache)
 symbols = furs_df["Symbol"].unique()
 finance_data.fetch_info(symbols)
+
 
 def process_row(row):
     # Dividend amount
@@ -100,10 +111,15 @@ def process_row(row):
     if not row["ReliefStatement"]:
         statement = cache.get_relief_statement(row["PayerCountry"])
         if not statement:
-            statement = input("Enter the relief statement for country {}: ".format(row["PayerCountry"]))
+            statement = input(
+                "Enter the relief statement for country {}: ".format(
+                    row["PayerCountry"]
+                )
+            )
             cache.set_relief_statement(row["PayerCountry"], statement)
         row["ReliefStatement"] = statement
     return row
+
 
 # Process the rows (convert currencies, get missing data from the user, etc.)
 furs_df = furs_df.apply(process_row, axis=1)

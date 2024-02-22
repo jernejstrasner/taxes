@@ -1,12 +1,13 @@
 from lxml import etree
 import pandas as pd
 
+
 class Cache:
     def __init__(self) -> None:
         self.company = {}
         self.country = {}
         self.read_cache()
-    
+
     def read_cache(self):
         # Read the company cache from an XML file
         try:
@@ -52,12 +53,12 @@ class Cache:
                     el = etree.SubElement(country_el, key)
                     el.text = value
             xf.write(root, pretty_print=True)
-    
+
     def fill_isin_cache(self, additional_info_file):
         info = pd.read_excel(additional_info_file, sheet_name=0)
         for _, row in info.iterrows():
             self.set_isin(row["Instrument Symbol"], row["Instrument ISIN"])
-    
+
     def get_isin(self, symbol):
         return self.company.get(symbol, {}).get("isin")
 
@@ -66,7 +67,7 @@ class Cache:
             self.company[symbol]["isin"] = isin
         else:
             self.company[symbol] = {"isin": isin}
-    
+
     def get_address(self, symbol):
         return self.company.get(symbol, {}).get("address")
 
@@ -75,7 +76,7 @@ class Cache:
             self.company[symbol]["address"] = address
         else:
             self.company[symbol] = {"address": address}
-    
+
     def get_relief_statement(self, country):
         return self.country.get(country, {}).get("relief_statement")
 
@@ -84,7 +85,7 @@ class Cache:
             self.country[country]["relief_statement"] = relief_statement
         else:
             self.country[country] = {"relief_statement": relief_statement}
-    
+
     def get_country_name(self, country):
         return self.country.get(country, {}).get("name")
 
