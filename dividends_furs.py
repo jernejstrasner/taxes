@@ -123,6 +123,12 @@ def process_row(row):
 # Process the rows (convert currencies, get missing data from the user, etc.)
 furs_df = furs_df.apply(process_row, axis=1)
 
+# Output some informational info (e.g. the total amount of dividends)
+total_dividends = round(furs_df["Value"].sum(), 2)
+total_foreign_tax = round(furs_df["ForeignTax"].sum(), 2)
+print("Total dividends: ", total_dividends, "EUR")
+print("Total foreign tax: ", total_foreign_tax, "EUR")
+
 # Load taxpayer data
 taxpayer = Taxpayer()
 taxpayer.get_input()
