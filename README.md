@@ -18,7 +18,7 @@ Currently only `xlsx` exports from Saxo Bank are supported.
 2. Run the script using the following command:
 
   ```shell
-  python3 dividends_furs.py <dividends.xlsx> --additional-info <additional_info.xlsx> --taxpayer <taxpayer.xml> --output <doh_div.xml>
+  python3 dividends_furs.py <dividends.xlsx> --additional-info <additional_info.xlsx> --output <doh_div.xml>
   ```
 
 ## Description of options
@@ -26,8 +26,6 @@ Currently only `xlsx` exports from Saxo Bank are supported.
 - `<dividends.xlsx>`: This is the input file containing the dividends data. Replace `<dividends.xlsx>` with the actual path or name of your dividends file. For example, `python3 dividends_furs.py dividends_data.xlsx`.
 
 - `--additional-info <additional_info.xlsx>`: This option is used to provide additional information related to the dividends (like ISIN numbers). Replace `<additional_info.xlsx>` with the actual path or name of your additional info file. For example, `--additional-info info.xlsx`.
-
-- `--taxpayer <taxpayer.xml>`: This option specifies the taxpayer information file in XML format. Replace `<taxpayer.xml>` with the actual path or name of your taxpayer file. For example, `--taxpayer taxpayer_info.xml`. You can see an example in `taxpayer_fake.xml`.
 
 - `--output <doh_div.xml>`: This option determines the output file name for the calculated tax data in XML format. Replace `<doh_div.xml>` with the desired name of your output file. For example, `--output tax_data.xml`.
 

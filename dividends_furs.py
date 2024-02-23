@@ -12,18 +12,12 @@ from taxpayer import Taxpayer
 parser = argparse.ArgumentParser()
 parser.add_argument("dividends", help="Path to the dividends xlsx file")
 parser.add_argument(
-    "--taxpayer", help="Path to the taxpayer xml info file", required=True
-)
-parser.add_argument(
     "--additional-info",
     help="Path to the additional info xlsx file with ISINs and addresses of the payers",
     required=False,
 )
 parser.add_argument("--output", help="Path to the output xml file", required=False)
 args = parser.parse_args()
-
-# Load taxpayer data
-taxpayer = Taxpayer.from_file(args.taxpayer)
 
 # Open dividends xlsx file
 df = pd.read_excel(args.dividends, sheet_name="Share Dividends")
@@ -128,6 +122,10 @@ def process_row(row):
 
 # Process the rows (convert currencies, get missing data from the user, etc.)
 furs_df = furs_df.apply(process_row, axis=1)
+
+# Load taxpayer data
+taxpayer = Taxpayer()
+taxpayer.get_input()
 
 # Write the final XML file
 xml = XML(taxpayer, furs_df, args.output or "dividends_furs.xml")
