@@ -120,6 +120,8 @@ def process_row(row):
     return row
 
 
+# Filter the rows to only include the ones with the event "Cash dividend"
+furs_df = furs_df[furs_df["Event"] == "Cash dividend"]
 # Process the rows (convert currencies, get missing data from the user, etc.)
 furs_df = furs_df.apply(process_row, axis=1)
 
