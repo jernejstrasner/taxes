@@ -12,6 +12,7 @@ def get_currency(dates):
             currency = child.attrib["oznaka"]
             if currency == "USD" or currency == "CAD":
                 currencies[currency] = float(child.text)
-        results[date] = currencies
+        if len(currencies) > 0:
+            results[date] = currencies
         element.clear()
     return results

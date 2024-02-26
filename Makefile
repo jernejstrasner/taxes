@@ -6,6 +6,7 @@ bootstrap: check-python
 	
 	@mkdir -p data
 	@curl -o data/Doh_Div_3.xsd http://edavki.durs.si/Documents/Schemas/Doh_Div_3.xsd
+	@curl -o data/Doh_KDVP_9.xsd http://edavki.durs.si/Documents/Schemas/Doh_KDVP_9.xsd
 	@curl -o data/EDP-Common-1.xsd http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd
 	@curl -o data/currency.xml https://www.bsi.si/_data/tecajnice/dtecbs-l.xml
 

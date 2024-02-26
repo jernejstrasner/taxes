@@ -12,6 +12,7 @@ class Taxpayer:
     postName: str
     email: str
     phone: str
+    birthDate: str
 
     def __init__(self):
         self.path = "data/taxpayer.xml"
@@ -26,6 +27,7 @@ class Taxpayer:
             self.postName = root.findtext("postName")
             self.email = root.findtext("email")
             self.phone = root.findtext("phone")
+            self.birthDate = root.findtext("birthDate")
         except (OSError, AttributeError):
             self.taxNumber = None
             self.name = None
@@ -35,6 +37,7 @@ class Taxpayer:
             self.postName = None
             self.email = None
             self.phone = None
+            self.birthDate = None
             self.get_input()
 
     def save(self):
@@ -102,5 +105,12 @@ class Taxpayer:
             verification = input(f"Is your phone {self.phone}? (Y/N): ")
             if verification.upper() != "Y":
                 self.phone = input("Enter your phone: ")
+        
+        if not self.birthDate:
+            self.birthDate = input("Enter your birth date: ")
+        else:
+            verification = input(f"Is your birth date {self.birthDate}? (Y/N): ")
+            if verification.upper() != "Y":
+                self.birthDate = input("Enter your birth date: ")
         
         self.save()
