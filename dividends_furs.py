@@ -8,28 +8,10 @@ from finance import FinanceData
 from xml_output import XML
 from taxpayer import Taxpayer
 
-def main():
-    # Parse the arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dividends", help="Path to the dividends xlsx file")
-    parser.add_argument(
-        "--additional-info",
-        help="Path to the additional info xlsx file with ISINs and addresses of the payers",
-        required=False,
-    )
-    parser.add_argument("--output", help="Path to the output xml file", required=False)
-    args = parser.parse_args()
-
+def dividends(args, company_cache, country_cache):
     # Open dividends xlsx file
     df = pd.read_excel(args.dividends, sheet_name="Share Dividends")
     print("Opened dividends file: ", args.dividends)
-
-    # Create a cache object
-    company_cache = CompanyCache("company_cache.xml")
-    if args.additional_info:
-        company_cache.fill_isin_cache(args.additional_info)
-        company_cache.flush()
-    country_cache = CountryCache("country_cache.xml")
 
     # Rename the columns
     furs_df = df.rename(
@@ -140,6 +122,40 @@ def main():
     xml = XML(taxpayer, furs_df, args.output or "dividends_furs.xml")
     xml.write()
     xml.verify("data/Doh_Div_3.xsd")
+
+def gains():
+    pass
+
+def main():
+    # Parse the arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--broker", help="Name of the broker", required=True, choices=["saxo"])
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--dividends", help="Path to the dividends xlsx file")
+    group.add_argument("--gains", help="Path to the gains xlsx file")
+    parser.add_argument(
+        "--additional-info",
+        help="Path to the additional info xlsx file with ISINs and addresses of the payers",
+        required=False,
+    )
+    parser.add_argument("--output", help="Path to the output xml file", required=False)
+    args = parser.parse_args()
+
+    # Create a cache object
+    company_cache = CompanyCache("company_cache.xml")
+    if args.additional_info:
+        company_cache.fill_isin_cache(args.additional_info)
+        company_cache.flush()
+    country_cache = CountryCache("country_cache.xml")
+
+    # Process based on input
+    if args.dividends:
+        dividends(args, company_cache, country_cache)
+    elif args.gains:
+        gains()
+    else:
+        print("No input file provided")
+        sys.exit(1)
 
     # Write the caches
     company_cache.flush()
