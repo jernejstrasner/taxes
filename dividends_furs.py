@@ -58,13 +58,13 @@ def dividends(args, company_cache, country_cache):
             print("Currency not supported: ", row["Value"])
             sys.exit(1)
         # Tax witheld at source
-        foreign_tax = row["ForeignTax"].lstrip(" +\-")
+        foreign_tax = row["ForeignTax"].lstrip(" +-")
         if foreign_tax.startswith("USD"):
             value = float(foreign_tax.replace("USD", ""))
-            row["ForeignTax"] = value * exchange_rates[row["Date"]]["USD"]
+            row["ForeignTax"] = value / exchange_rates[row["Date"]]["USD"]
         elif foreign_tax.startswith("CAD"):
             value = float(foreign_tax.replace("CAD", ""))
-            row["ForeignTax"] = value * exchange_rates[row["Date"]]["CAD"]
+            row["ForeignTax"] = value / exchange_rates[row["Date"]]["CAD"]
         elif foreign_tax.startswith("EUR"):
             row["ForeignTax"] = float(foreign_tax.replace("EUR", ""))
         else:
