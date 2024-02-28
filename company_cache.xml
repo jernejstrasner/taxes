@@ -39,4 +39,58 @@
   <item id="FRC:xnys">
     <isin>US33616C1009</isin>
   </item>
+  <item id="CPG:xtse">
+    <address>585 –8th Avenue SW, Calgary, AB, T2P 1G1</address>
+    <isin>CA22576C1014</isin>
+  </item>
+  <item id="ABT:xnys">
+    <address>100 Abbott Park Road, North Chicago, IL, 60064-6400</address>
+    <isin>US0028241000</isin>
+  </item>
+  <item id="FANG:xnas">
+    <address>500 West Texas Avenue, Midland, TX, 79701</address>
+    <isin>US25278X1090</isin>
+  </item>
+  <item id="ABR:xnys">
+    <address>333 Earle Ovington Boulevard, Uniondale, NY, 11553</address>
+    <isin>US0389231087</isin>
+  </item>
+  <item id="DAL:xnys">
+    <address>PO Box 20706, Atlanta, GA, 30320-6001</address>
+    <isin>US2473617023</isin>
+  </item>
+  <item id="CANO:xnys">
+    <address>9725 NW 117th Avenue, Miami, FL, 33178</address>
+  </item>
+  <item id="TFFP:xnas">
+    <address>1751 River Run, Fort Worth, TX, 76107</address>
+  </item>
+  <item id="EQQQ:xetr">
+    <isin>IE0032077012</isin>
+    <address>GROUND FLOOR, 2 CUMBERLAND PLACE FENIAN STREET, DUBLIN 2</address>
+  </item>
+  <item id="VWRL:xams">
+    <isin>IE00BK5BQT80</isin>
+    <address>Vanguard Group (Ireland) Ltd 70 Sir John Rogerson's Quay Dublin</address>
+  </item>
+  <item id="VUSA:xlon">
+    <isin>IE00B3XXRP09</isin>
+    <address>Vanguard Group (Ireland) Ltd 70 Sir John Rogerson's Quay Dublin</address>
+  </item>
+  <item id="VUSA:xetr">
+    <isin>IE00B3XXRP09</isin>
+    <address>Vanguard Group (Ireland) Ltd 70 Sir John Rogerson's Quay Dublin</address>
+  </item>
+  <item id="NOKIA:xhel">
+    <isin>FI0009000681</isin>
+    <address>Karakaari 7, 02610 Espoo</address>
+  </item>
+  <item id="QDVD:xetr">
+    <isin>IE00BKM4H312</isin>
+    <address>1ST FLOOR, 2 BALLSBRIDGE PARK, BALLSBRIDGE, DUBLIN 4, D04 YW83</address>
+  </item>
+  <item id="OPC:xetr">
+    <isin>US6745991058</isin>
+    <address>Oxy 5 Greenway Plaza, Suite 110. Houston, Texas 77046-0521</address>
+  </item>
 </cache>
