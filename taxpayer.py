@@ -50,6 +50,36 @@ class Taxpayer:
             xf.write(root, pretty_print=True)
 
     def get_input(self):
+        # If we have all the data, we can ask the user to verify it at once
+        if all(
+            [
+                self.taxNumber,
+                self.name,
+                self.address,
+                self.city,
+                self.postNumber,
+                self.postName,
+                self.email,
+                self.phone,
+                self.birthDate,
+            ]
+        ):
+            verification = input(
+                f"Is this information correct?\nTax number: {self.taxNumber}\nName: {self.name}\nAddress: {self.address}\nCity: {self.city}\nPost number: {self.postNumber}\nPost name: {self.postName}\nEmail: {self.email}\nPhone: {self.phone}\nBirth date: {self.birthDate}\n(Y/N): "
+            )
+            if verification.upper() != "Y" and verification != "":
+                self.taxNumber = input("Enter your tax number: ")
+                self.name = input("Enter your name: ")
+                self.address = input("Enter your address: ")
+                self.city = input("Enter your city: ")
+                self.postNumber = input("Enter your post number: ")
+                self.postName = input("Enter your post name: ")
+                self.email = input("Enter your email: ")
+                self.phone = input("Enter your phone: ")
+                self.birthDate = input("Enter your birth date: ")
+            self.save()
+            return
+
         if not self.taxNumber:
             self.taxNumber = input("Enter your tax number: ")
         else:

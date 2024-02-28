@@ -8,7 +8,7 @@ from finance import FinanceData
 from xml_output import XML, XMLWriter
 from taxpayer import Taxpayer
 from lxml.builder import ElementMaker
-
+from gains import DohKDVP, KDVPSecurityOpen, KDVPSecurityClose
 
 def dividends(args, company_cache, country_cache):
     # Open dividends xlsx file
@@ -126,6 +126,9 @@ def dividends(args, company_cache, country_cache):
     xml.verify("data/Doh_Div_3.xsd")
 
 
+
+
+
 def gains(args):
     # Open gains xlsx file
     df = pd.read_excel(args.gains, sheet_name="ClosedPositions")
@@ -169,6 +172,18 @@ def gains(args):
     # Output some informational info (e.g. the total amount of gains and losses)
     print("Number of trades: ", df.shape[0])
 
+    # Convert the dataframe to typed DohKDVP objects
+    doh_kdvp = DohKDVP()
+    for i, row in df.iterrows():
+        trade_open = KDVPSecurityOpen(
+            row["Trade Date Open"], row["QuantityOpen"], row["Open Price"], 0, "B"
+        )
+        doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
+        trade_close = KDVPSecurityClose(
+            row["Trade Date Close"], row["QuantityClose"], row["Close Price"], 0, row["Gain"] < 0
+        )
+        doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
+    
     # Load taxpayer data
     taxpayer = Taxpayer()
     taxpayer.get_input()
@@ -214,37 +229,36 @@ def gains(args):
                     E.KDVPItem(
                         E.ItemID(str(i+1)),
                         E.InventoryListType("PLVP"),
-                        E.Name(row["Symbol"]),
+                        E.Name(item.name),
                         E.HasForeignTax("false"),
                         E.HasLossTransfer("false"),
                         E.ForeignTransfer("false"),
                         E.TaxDecreaseConformance("false"),
                         E.Securities(
-                            E.Code(row["Symbol"]),
-                            E.IsFond("false" if row["Asset type"] == "Stock" else "true"),
-                            E.Row(
-                                E.ID("0"),
-                                E.Purchase(
-                                    E.F1(row["Trade Date Open"]),
-                                    E.F2("B"),
-                                    E.F3("{:.4f}".format(row["QuantityOpen"])),
-                                    E.F4("{:.4f}".format(row["Open Price"])),
-                                ),
-                                E.F8("{:.4f}".format(row["QuantityOpen"])),
-                            ),
-                            E.Row(
-                                E.ID("1"),
-                                E.Sale(
-                                    E.F6(row["Trade Date Close"]),
-                                    E.F7("{:.4f}".format(row["QuantityClose"])),
-                                    E.F9("{:.4f}".format(row["Close Price"])),
-                                    E.F10("false" if row["Gain"] > 0 else "true")
-                                ),
-                                E.F8("{:.4f}".format(row["QuantityOpen"] - row["QuantityClose"])),
-                            ),
+                            E.Code(item.name),
+                            E.IsFond(str(item.is_fond).lower()),
+                            *[
+                                E.Row(
+                                    E.ID(str(i)),
+                                    E.Sale(
+                                        E.F6(trade.date),
+                                        E.F7("{:.4f}".format(trade.quantity)),
+                                        E.F9("{:.4f}".format(trade.value)),
+                                        E.F10("true"),
+                                    ) if isinstance(trade, KDVPSecurityClose) else
+                                    E.Purchase(
+                                        E.F1(trade.date),
+                                        E.F2(trade.acquisition_type),
+                                        E.F3("{:.4f}".format(trade.quantity)),
+                                        E.F4("{:.4f}".format(trade.value)),
+                                    ),
+                                    E.F8("{:.4f}".format(trade.stock)),
+                                )
+                                for i, trade in enumerate(item.securities)
+                            ]
                         ),
                     )
-                    for i, row in df.iterrows()
+                    for i, item in enumerate(doh_kdvp.items.values())
                 ],
             ),
         ),
