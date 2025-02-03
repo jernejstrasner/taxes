@@ -11,4 +11,5 @@ dependencies = [
     "requests>=2.31.0",
     "ruff>=0.9.4",
     "xmlschema>=1.11.0",
+    "yfinance>=0.2.52",
 ]

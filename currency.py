@@ -1,4 +1,5 @@
 from lxml import etree
+import requests
 
 
 def get_currency(dates):
@@ -16,3 +17,9 @@ def get_currency(dates):
             results[date] = currencies
         element.clear()
     return results
+
+def download_currency():
+    url = "https://www.bsi.si/_data/tecajnice/dtecbs-l.xml"
+    response = requests.get(url)
+    with open("data/currency.xml", "wb") as f:
+        f.write(response.content)

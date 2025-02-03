@@ -1,0 +1,380 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Envelope xmlns:edp="http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd" xmlns="http://edavki.durs.si/Documents/Schemas/Doh_Div_3.xsd">
+  <edp:Header>
+    <edp:taxpayer>
+      <edp:taxNumber>99999999</edp:taxNumber>
+      <edp:taxpayerType>FO</edp:taxpayerType>
+      <edp:name>Jernej Strasner</edp:name>
+      <edp:address1>Kolodvorska cesta 7e</edp:address1>
+      <edp:city>Bled</edp:city>
+      <edp:postNumber>4260</edp:postNumber>
+      <edp:postName>Bled</edp:postName>
+    </edp:taxpayer>
+    <edp:Workflow>
+      <edp:DocumentWorkflowID>O</edp:DocumentWorkflowID>
+      <edp:DocumentWorkflowName/>
+    </edp:Workflow>
+    <edp:domain>edavki.durs.si</edp:domain>
+  </edp:Header>
+  <edp:AttachmentList/>
+  <edp:Signatures/>
+  <body>
+    <Doh_Div>
+      <Period>2024</Period>
+      <EmailAddress>jernej@strsnr.com</EmailAddress>
+      <PhoneNumber>040616598</PhoneNumber>
+      <ResidentCountry>SI</ResidentCountry>
+      <IsResident>true</IsResident>
+      <SelfReport>false</SelfReport>
+      <WfTypeU>false</WfTypeU>
+    </Doh_Div>
+    <Dividend>
+      <Date>2023-02-16</Date>
+      <PayerIdentificationNumber>US0378331005</PayerIdentificationNumber>
+      <PayerName>Apple Inc.</PayerName>
+      <PayerAddress>One Apple Park Way, Cupertino, CA, 95014</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>46.86</Value>
+      <ForeignTax>7.03</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-03-10</Date>
+      <PayerIdentificationNumber>US1667641005</PayerIdentificationNumber>
+      <PayerName>Chevron Corp.</PayerName>
+      <PayerAddress>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>84.16</Value>
+      <ForeignTax>12.62</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-03-22</Date>
+      <PayerIdentificationNumber>US2855121099</PayerIdentificationNumber>
+      <PayerName>Electronic Arts</PayerName>
+      <PayerAddress>209 Redwood Shores Parkway, Redwood City, CA, 94065</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>0.88</Value>
+      <ForeignTax>0.13</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-03-23</Date>
+      <PayerIdentificationNumber>US9220428745</PayerIdentificationNumber>
+      <PayerName>Vanguard FTSE Europe ETF</PayerName>
+      <PayerAddress>100 Vanguard Boulevard, Malvern, PA, 19355</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>11.72</Value>
+      <ForeignTax>1.76</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-03-29</Date>
+      <PayerIdentificationNumber>US67066G1040</PayerIdentificationNumber>
+      <PayerName>NVIDIA Corp.</PayerName>
+      <PayerAddress>2788 San Tomas Expressway, Santa Clara, CA, 95051</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>4.72</Value>
+      <ForeignTax>0.71</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-03-31</Date>
+      <PayerIdentificationNumber>US11135F1012</PayerIdentificationNumber>
+      <PayerName>Broadcom Inc.</PayerName>
+      <PayerAddress>3421 Hillview Ave, Palo Alto, CA, 94304</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>16.92</Value>
+      <ForeignTax>2.54</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-05-18</Date>
+      <PayerIdentificationNumber>US0378331005</PayerIdentificationNumber>
+      <PayerName>Apple Inc.</PayerName>
+      <PayerAddress>One Apple Park Way, Cupertino, CA, 95014</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>48.39</Value>
+      <ForeignTax>7.26</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-05-26</Date>
+      <PayerIdentificationNumber>US1729674242</PayerIdentificationNumber>
+      <PayerName>Citigroup Inc.</PayerName>
+      <PayerAddress>388 Greenwich Street, New York, NY, 10013</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>103.89</Value>
+      <ForeignTax>15.58</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-08</Date>
+      <PayerIdentificationNumber>US5949181045</PayerIdentificationNumber>
+      <PayerName>Microsoft Corp.</PayerName>
+      <PayerAddress>One Microsoft Way, Redmond, WA, 98052-6399</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>24.07</Value>
+      <ForeignTax>3.61</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-12</Date>
+      <PayerIdentificationNumber>US1667641005</PayerIdentificationNumber>
+      <PayerName>Chevron Corp.</PayerName>
+      <PayerAddress>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>82.76</Value>
+      <ForeignTax>12.41</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-21</Date>
+      <PayerIdentificationNumber>US2855121099</PayerIdentificationNumber>
+      <PayerName>Electronic Arts</PayerName>
+      <PayerAddress>209 Redwood Shores Parkway, Redwood City, CA, 94065</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>0.87</Value>
+      <ForeignTax>0.13</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-23</Date>
+      <PayerIdentificationNumber>US9220428745</PayerIdentificationNumber>
+      <PayerName>Vanguard FTSE Europe ETF</PayerName>
+      <PayerAddress>100 Vanguard Boulevard, Malvern, PA, 19355</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>60.58</Value>
+      <ForeignTax>9.09</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-30</Date>
+      <PayerIdentificationNumber>US11135F1012</PayerIdentificationNumber>
+      <PayerName>Broadcom Inc.</PayerName>
+      <PayerAddress>3421 Hillview Ave, Palo Alto, CA, 94304</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>16.93</Value>
+      <ForeignTax>2.54</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-06-30</Date>
+      <PayerIdentificationNumber>US67066G1040</PayerIdentificationNumber>
+      <PayerName>NVIDIA Corp.</PayerName>
+      <PayerAddress>2788 San Tomas Expressway, Santa Clara, CA, 95051</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>4.71</Value>
+      <ForeignTax>0.71</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-08-17</Date>
+      <PayerIdentificationNumber>US0378331005</PayerIdentificationNumber>
+      <PayerName>Apple Inc.</PayerName>
+      <PayerAddress>One Apple Park Way, Cupertino, CA, 95014</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>48.00</Value>
+      <ForeignTax>7.20</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-08-25</Date>
+      <PayerIdentificationNumber>US1729674242</PayerIdentificationNumber>
+      <PayerName>Citigroup Inc.</PayerName>
+      <PayerAddress>388 Greenwich Street, New York, NY, 10013</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>107.39</Value>
+      <ForeignTax>16.11</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-09-11</Date>
+      <PayerIdentificationNumber>US1667641005</PayerIdentificationNumber>
+      <PayerName>Chevron Corp.</PayerName>
+      <PayerAddress>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>83.08</Value>
+      <ForeignTax>12.46</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-09-14</Date>
+      <PayerIdentificationNumber>US5949181045</PayerIdentificationNumber>
+      <PayerName>Microsoft Corp.</PayerName>
+      <PayerAddress>One Microsoft Way, Redmond, WA, 98052-6399</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>24.08</Value>
+      <ForeignTax>3.62</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-09-20</Date>
+      <PayerIdentificationNumber>US2855121099</PayerIdentificationNumber>
+      <PayerName>Electronic Arts</PayerName>
+      <PayerAddress>209 Redwood Shores Parkway, Redwood City, CA, 94065</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>0.89</Value>
+      <ForeignTax>0.13</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-09-28</Date>
+      <PayerIdentificationNumber>US67066G1040</PayerIdentificationNumber>
+      <PayerName>NVIDIA Corp.</PayerName>
+      <PayerAddress>2788 San Tomas Expressway, Santa Clara, CA, 95051</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>4.86</Value>
+      <ForeignTax>0.73</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-09-29</Date>
+      <PayerIdentificationNumber>US11135F1012</PayerIdentificationNumber>
+      <PayerName>Broadcom Inc.</PayerName>
+      <PayerAddress>3421 Hillview Ave, Palo Alto, CA, 94304</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>17.37</Value>
+      <ForeignTax>2.61</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-11-16</Date>
+      <PayerIdentificationNumber>US0378331005</PayerIdentificationNumber>
+      <PayerName>Apple Inc.</PayerName>
+      <PayerAddress>One Apple Park Way, Cupertino, CA, 95014</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>48.23</Value>
+      <ForeignTax>7.24</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-11-22</Date>
+      <PayerIdentificationNumber>US1729674242</PayerIdentificationNumber>
+      <PayerName>Citigroup Inc.</PayerName>
+      <PayerAddress>388 Greenwich Street, New York, NY, 10013</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>106.38</Value>
+      <ForeignTax>15.96</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-12-11</Date>
+      <PayerIdentificationNumber>US1667641005</PayerIdentificationNumber>
+      <PayerName>Chevron Corp.</PayerName>
+      <PayerAddress>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>82.82</Value>
+      <ForeignTax>12.42</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-12-14</Date>
+      <PayerIdentificationNumber>US5949181045</PayerIdentificationNumber>
+      <PayerName>Microsoft Corp.</PayerName>
+      <PayerAddress>One Microsoft Way, Redmond, WA, 98052-6399</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>26.10</Value>
+      <ForeignTax>3.92</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-12-28</Date>
+      <PayerIdentificationNumber>US67066G1040</PayerIdentificationNumber>
+      <PayerName>NVIDIA Corp.</PayerName>
+      <PayerAddress>2788 San Tomas Expressway, Santa Clara, CA, 95051</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>4.61</Value>
+      <ForeignTax>0.69</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-12-29</Date>
+      <PayerIdentificationNumber>US11135F1012</PayerIdentificationNumber>
+      <PayerName>Broadcom Inc.</PayerName>
+      <PayerAddress>3421 Hillview Ave, Palo Alto, CA, 94304</PayerAddress>
+      <PayerCountry>US</PayerCountry>
+      <Type>1</Type>
+      <Value>19.00</Value>
+      <ForeignTax>2.85</ForeignTax>
+      <SourceCountry>US</SourceCountry>
+      <ReliefStatement>Številka 10/01 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-08-10</Date>
+      <PayerIdentificationNumber>NL0010273215</PayerIdentificationNumber>
+      <PayerName>ASML Holding NV</PayerName>
+      <PayerAddress>De Run 6501, Veldhoven, 5504 DR</PayerAddress>
+      <PayerCountry>NL</PayerCountry>
+      <Type>1</Type>
+      <Value>21.75</Value>
+      <ForeignTax>3.26</ForeignTax>
+      <SourceCountry>NL</SourceCountry>
+      <ReliefStatement>Številka 4/05 (1, 10)</ReliefStatement>
+    </Dividend>
+    <Dividend>
+      <Date>2023-11-10</Date>
+      <PayerIdentificationNumber>NL0010273215</PayerIdentificationNumber>
+      <PayerName>ASML Holding NV</PayerName>
+      <PayerAddress>De Run 6501, Veldhoven, 5504 DR</PayerAddress>
+      <PayerCountry>NL</PayerCountry>
+      <Type>1</Type>
+      <Value>21.75</Value>
+      <ForeignTax>3.26</ForeignTax>
+      <SourceCountry>NL</SourceCountry>
+      <ReliefStatement>Številka 4/05 (1, 10)</ReliefStatement>
+    </Dividend>
+  </body>
+</Envelope>

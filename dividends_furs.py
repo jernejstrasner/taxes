@@ -3,6 +3,7 @@ import sys
 
 import pandas as pd
 from lxml.builder import ElementMaker
+import requests
 
 import currency
 from cache import CompanyCache, CountryCache
@@ -10,6 +11,7 @@ from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
+from cache_utils import cache_daily
 
 
 def dividends(args, company_cache, country_cache):
@@ -273,6 +275,23 @@ def gains(args):
     xml.write(envelope)
     xml.verify("data/Doh_KDVP_9.xsd")
 
+@cache_daily('currency.cache')
+def download_currency():
+    print("Downloading latest currency data...")
+    currency.download_currency()
+    print("Downloaded latest currency data")
+
+@cache_daily('schemas.cache')
+def download_schemas():
+    # Download the latest XML schemas
+    print("Downloading XML schemas...")
+    schemas = ["Doh_Div_3.xsd", "Doh_KDVP_9.xsd", "EDP-Common-1.xsd"]
+    for schema in schemas:
+        url = f"https://edavki.durs.si/Documents/Schemas/{schema}"
+        response = requests.get(url)
+        with open(f"data/{schema}", "wb") as f:
+            f.write(response.content)
+    print("Downloaded XML schemas")
 
 def main():
     # Parse the arguments
@@ -293,6 +312,12 @@ def main():
         "--correction", help="Is this a correction?", action="store_true"
     )
     args = parser.parse_args()
+
+    # Download fresh currency data if needed
+    download_currency()
+
+    # Download the latest XML schemas
+    download_schemas()
 
     # Create a cache object
     company_cache = CompanyCache("company_cache.xml")
