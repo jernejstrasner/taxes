@@ -1,14 +1,16 @@
+import argparse
 import sys
 
 import pandas as pd
+from lxml.builder import ElementMaker
+
 import currency
 from cache import CompanyCache, CountryCache
-import argparse
 from finance import FinanceData
-from xml_output import XML, XMLWriter
+from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
 from taxpayer import Taxpayer
-from lxml.builder import ElementMaker
-from gains import DohKDVP, KDVPSecurityOpen, KDVPSecurityClose
+from xml_output import XML, XMLWriter
+
 
 def dividends(args, company_cache, country_cache):
     # Open dividends xlsx file
@@ -126,9 +128,6 @@ def dividends(args, company_cache, country_cache):
     xml.verify("data/Doh_Div_3.xsd")
 
 
-
-
-
 def gains(args):
     # Open gains xlsx file
     df = pd.read_excel(args.gains, sheet_name="ClosedPositions")
@@ -180,7 +179,11 @@ def gains(args):
         )
         doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
         trade_close = KDVPSecurityClose(
-            row["Trade Date Close"], row["QuantityClose"], row["Close Price"], 0, row["Gain"] < 0
+            row["Trade Date Close"],
+            row["QuantityClose"],
+            row["Close Price"],
+            0,
+            row["Gain"] < 0,
         )
         doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
 
@@ -227,7 +230,7 @@ def gains(args):
                 ),
                 *[
                     E.KDVPItem(
-                        E.ItemID(str(i+1)),
+                        E.ItemID(str(i + 1)),
                         E.InventoryListType("PLVP"),
                         E.Name(item.name),
                         E.HasForeignTax("false"),
@@ -245,8 +248,9 @@ def gains(args):
                                         E.F7("{:.4f}".format(trade.quantity)),
                                         E.F9("{:.4f}".format(trade.value)),
                                         E.F10("true"),
-                                    ) if isinstance(trade, KDVPSecurityClose) else
-                                    E.Purchase(
+                                    )
+                                    if isinstance(trade, KDVPSecurityClose)
+                                    else E.Purchase(
                                         E.F1(trade.date),
                                         E.F2(trade.acquisition_type),
                                         E.F3("{:.4f}".format(trade.quantity)),
@@ -255,7 +259,7 @@ def gains(args):
                                     E.F8("{:.4f}".format(trade.stock)),
                                 )
                                 for i, trade in enumerate(item.securities)
-                            ]
+                            ],
                         ),
                     )
                     for i, item in enumerate(doh_kdvp.items.values())
@@ -285,7 +289,9 @@ def main():
         required=False,
     )
     parser.add_argument("--output", help="Path to the output xml file", required=False)
-    parser.add_argument("--correction", help="Is this a correction?", action="store_true")
+    parser.add_argument(
+        "--correction", help="Is this a correction?", action="store_true"
+    )
     args = parser.parse_args()
 
     # Create a cache object
