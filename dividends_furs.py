@@ -183,7 +183,7 @@ def gains(args):
             row["Trade Date Close"], row["QuantityClose"], row["Close Price"], 0, row["Gain"] < 0
         )
         doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
-    
+
     # Load taxpayer data
     taxpayer = Taxpayer()
     taxpayer.get_input()
