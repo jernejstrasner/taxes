@@ -126,7 +126,7 @@ def dividends(args, company_cache, country_cache):
     taxpayer.get_input()
 
     # Write the final XML file
-    xml = XML(taxpayer, furs_df, args.output or "dividends_furs.xml", args.correction)
+    xml = XML(taxpayer, furs_df, args.output or "data/dividends_furs.xml", args.correction)
     xml.write()
     xml.verify("data/Doh_Div_3.xsd")
 
@@ -275,7 +275,7 @@ def gains(args):
     )
 
     # Write the final XML file
-    xml = XMLWriter(args.output or "gains_furs.xml")
+    xml = XMLWriter(args.output or "data/gains_furs.xml")
     xml.write(envelope)
     xml.verify("data/Doh_KDVP_9.xsd")
 
@@ -330,7 +330,7 @@ def interest(args):
     print("Total interest amount: ", total_interest, "EUR")
 
     # Write the final XML file
-    xml = XMLWriter(args.output or "interest_furs.xml")
+    xml = XMLWriter(args.output or "data/interest_furs.xml")
     xml.write(doh_obr.to_xml())
     xml.verify("data/Doh_Obr_2.xsd")
 
