@@ -28,7 +28,7 @@ class KDVPItem:
     def update_trade(self, trade: KDVPSecurityOpen | KDVPSecurityClose) -> bool:
         # Check if a trade with the same date and price already exists and join them
         for s in self.securities:
-            if s.date == trade.date and s.value == trade.value and type(s) == type(trade):
+            if s.date == trade.date and s.value == trade.value and isinstance(s, type(trade)):
                 if isinstance(s, KDVPSecurityOpen) and s.acquisition_type == trade.acquisition_type:
                     s.quantity += trade.quantity
                     return True

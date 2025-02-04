@@ -5,13 +5,14 @@ import pandas as pd
 from lxml.builder import ElementMaker
 import requests
 
-import currency
+from currency import Currency
 from cache import CompanyCache, CountryCache
 from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 from cache_utils import cache_daily
+from interest import DohObr, Interest, InterestType
 
 
 def dividends(args, company_cache, country_cache):
@@ -42,7 +43,7 @@ def dividends(args, company_cache, country_cache):
     )
 
     # Get the exchange rate for the dates in the Date column
-    exchange_rates = currency.get_currency(furs_df["Date"].unique())
+    currency = Currency(furs_df["Date"].unique(), ["USD", "CAD"])
 
     finance_data = FinanceData(company_cache)
     symbols = furs_df["Symbol"].unique()
@@ -52,10 +53,10 @@ def dividends(args, company_cache, country_cache):
         # Dividend amount
         if row["Value"].startswith("USD"):
             value = float(row["Value"].replace("USD", ""))
-            row["Value"] = value / exchange_rates[row["Date"]]["USD"]
+            row["Value"] = value / currency.get_rate(row["Date"], "USD")
         elif row["Value"].startswith("CAD"):
             value = float(row["Value"].replace("CAD", ""))
-            row["Value"] = value / exchange_rates[row["Date"]]["CAD"]
+            row["Value"] = value / currency.get_rate(row["Date"], "CAD")
         elif row["Value"].startswith("EUR"):
             row["Value"] = float(row["Value"].replace("EUR", ""))
         else:
@@ -65,10 +66,10 @@ def dividends(args, company_cache, country_cache):
         foreign_tax = row["ForeignTax"].lstrip(" +-")
         if foreign_tax.startswith("USD"):
             value = float(foreign_tax.replace("USD", ""))
-            row["ForeignTax"] = value / exchange_rates[row["Date"]]["USD"]
+            row["ForeignTax"] = value / currency.get_rate(row["Date"], "USD")
         elif foreign_tax.startswith("CAD"):
             value = float(foreign_tax.replace("CAD", ""))
-            row["ForeignTax"] = value / exchange_rates[row["Date"]]["CAD"]
+            row["ForeignTax"] = value / currency.get_rate(row["Date"], "CAD")
         elif foreign_tax.startswith("EUR"):
             row["ForeignTax"] = float(foreign_tax.replace("EUR", ""))
         else:
@@ -145,15 +146,18 @@ def gains(args):
 
     # Get the exchange rate for the dates in the Date column
     dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])
-    exchange_rates = currency.get_currency(dates)
+    currency = Currency(dates.unique(), ["USD", "CAD"])
 
     def process_row(row):
         # Process the currency of the trade
         conversion_open = 1
         conversion_close = 1
         if row["Instrument currency"] == "USD":
-            conversion_open = exchange_rates[row["Trade Date Open"]]["USD"]
-            conversion_close = exchange_rates[row["Trade Date Close"]]["USD"]
+            conversion_open = currency.get_rate(row["Trade Date Open"], "USD")
+            conversion_close = currency.get_rate(row["Trade Date Close"], "USD")
+        elif row["Instrument currency"] == "CAD":
+            conversion_open = currency.get_rate(row["Trade Date Open"], "CAD")
+            conversion_close = currency.get_rate(row["Trade Date Close"], "CAD")
         row["Open Price"] = float(row["Open Price"]) / conversion_open
         row["Close Price"] = float(row["Close Price"]) / conversion_close
         # Clean up the symbol
@@ -275,23 +279,81 @@ def gains(args):
     xml.write(envelope)
     xml.verify("data/Doh_KDVP_9.xsd")
 
-@cache_daily('currency.cache')
+
+def interest(args):
+    # Open interest xlsx file
+    df = pd.read_excel(args.interest, sheet_name="Interest Details")
+    print("Opened interest file: ", args.interest)
+
+    # Parse the date values in GMT and convert to CET/CEST accounting for DST
+    df["Date"] = (
+        pd.to_datetime(df["Calculation dateGMT"], format="%d-%b-%Y")
+        .dt.tz_localize("GMT")  # Mark the time as GMT
+        .dt.tz_convert("Europe/Ljubljana")  # Convert to CET/CEST (Slovenia timezone)
+    )
+
+    # Load taxpayer data
+    taxpayer = Taxpayer()
+    taxpayer.get_input()
+
+    # Create a DohObr object
+    doh_obr = DohObr(args.period, taxpayer)
+
+    # Get the exchange rate for the dates in the Date column
+    currency = Currency(
+        [d.date() for d in df["Date"].unique()],  # Convert Timestamp to datetime.date
+        ["USD"],
+    )
+
+    # Process the rows
+    for i, row in df.iterrows():
+        # We need to convert the interest amount to EUR if it's not already
+        if row["Account Currency"].startswith("USD"):
+            row["Interest amount "] = row["Interest amount "] / currency.get_rate(
+                row["Date"].date(),  # Convert Timestamp to datetime.date
+                "USD"
+            )
+        interest = Interest(
+            row["Date"].strftime("%Y-%m-%d"),
+            "15731249",
+            "Saxo Bank A/S",
+            "Philip Heymans Alle 15, 2900 Hellerup",
+            "DK",
+            InterestType.FUND_INTEREST,
+            row["Interest amount "],
+            "DK",
+        )
+        doh_obr.add_interest(interest)
+
+    # Write to console the total interest amount calculated in EUR
+    total_interest = round(sum([interest.value for interest in doh_obr.interests]), 2)
+    print("Total interest amount: ", total_interest, "EUR")
+
+    # Write the final XML file
+    xml = XMLWriter(args.output or "interest_furs.xml")
+    xml.write(doh_obr.to_xml())
+    xml.verify("data/Doh_Obr_2.xsd")
+
+
+@cache_daily("currency.cache")
 def download_currency():
     print("Downloading latest currency data...")
-    currency.download_currency()
+    Currency.download_currency()
     print("Downloaded latest currency data")
 
-@cache_daily('schemas.cache')
+
+@cache_daily("schemas.cache")
 def download_schemas():
     # Download the latest XML schemas
     print("Downloading XML schemas...")
-    schemas = ["Doh_Div_3.xsd", "Doh_KDVP_9.xsd", "EDP-Common-1.xsd"]
+    schemas = ["Doh_Div_3.xsd", "Doh_KDVP_9.xsd", "EDP-Common-1.xsd", "Doh_Obr_2.xsd"]
     for schema in schemas:
         url = f"https://edavki.durs.si/Documents/Schemas/{schema}"
         response = requests.get(url)
         with open(f"data/{schema}", "wb") as f:
             f.write(response.content)
     print("Downloaded XML schemas")
+
 
 def main():
     # Parse the arguments
@@ -302,6 +364,8 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--dividends", help="Path to the dividends xlsx file")
     group.add_argument("--gains", help="Path to the gains xlsx file")
+    group.add_argument("--interest", help="Path to the interest xlsx file")
+    parser.add_argument("--period", help="Period of the interest", required=False)
     parser.add_argument(
         "--additional-info",
         help="Path to the additional info xlsx file with ISINs and addresses of the payers",
@@ -331,6 +395,8 @@ def main():
         dividends(args, company_cache, country_cache)
     elif args.gains:
         gains(args)
+    elif args.interest:
+        interest(args)
     else:
         print("No input file provided")
         sys.exit(1)
