@@ -1,4 +1,5 @@
 import dataclasses
+
 from lxml import etree
 
 
@@ -14,10 +15,10 @@ class Taxpayer:
     phone: str
     birthDate: str
 
-    def __init__(self):
-        self.path = "data/taxpayer.xml"
+    def __init__(self, args):
+        self.path = args.taxpayer or "cache/taxpayer.xml"
         try:
-            tree = etree.parse(self.path)
+            tree = etree.parse(self.path)  # type: ignore
             root = tree.getroot()
             self.taxNumber = root.findtext("taxNumber")
             self.name = root.findtext("name")
@@ -135,12 +136,12 @@ class Taxpayer:
             verification = input(f"Is your phone {self.phone}? (Y/N): ")
             if verification.upper() != "Y":
                 self.phone = input("Enter your phone: ")
-        
+
         if not self.birthDate:
             self.birthDate = input("Enter your birth date: ")
         else:
             verification = input(f"Is your birth date {self.birthDate}? (Y/N): ")
             if verification.upper() != "Y":
                 self.birthDate = input("Enter your birth date: ")
-        
+
         self.save()

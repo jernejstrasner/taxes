@@ -15,7 +15,7 @@ from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 
 
-def dividends(args, company_cache, country_cache):
+def dividends(args, taxpayer, company_cache, country_cache):
     # Open dividends xlsx file
     df = pd.read_excel(args.dividends, sheet_name="Share Dividends")
     print("Opened dividends file: ", args.dividends)
@@ -121,10 +121,6 @@ def dividends(args, company_cache, country_cache):
     print("Total dividends: ", total_dividends, "EUR")
     print("Total foreign tax: ", total_foreign_tax, "EUR")
 
-    # Load taxpayer data
-    taxpayer = Taxpayer()
-    taxpayer.get_input()
-
     # Write the final XML file
     xml = XML(
         taxpayer,
@@ -136,7 +132,7 @@ def dividends(args, company_cache, country_cache):
     xml.verify("data/Doh_Div_3.xsd")
 
 
-def gains(args):
+def gains(args, taxpayer):
     # Open gains xlsx file
     df = pd.read_excel(args.gains, sheet_name="ClosedPositions")
     print("Opened gains file: ", args.gains)
@@ -197,10 +193,6 @@ def gains(args):
             row["Gain"] < 0,
         )
         doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
-
-    # Load taxpayer data
-    taxpayer = Taxpayer()
-    taxpayer.get_input()
 
     # Generate the XML structure
     EDP_NS = "http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd"
@@ -285,7 +277,7 @@ def gains(args):
     xml.verify("data/Doh_KDVP_9.xsd")
 
 
-def interest(args):
+def interest(args, taxpayer):
     # Open interest xlsx file
     df = pd.read_excel(args.interest, sheet_name="Interest Details")
     print("Opened interest file: ", args.interest)
@@ -296,10 +288,6 @@ def interest(args):
         .dt.tz_localize("GMT")  # Mark the time as GMT
         .dt.tz_convert("Europe/Ljubljana")  # Convert to CET/CEST (Slovenia timezone)
     )
-
-    # Load taxpayer data
-    taxpayer = Taxpayer()
-    taxpayer.get_input()
 
     # Create a DohObr object
     doh_obr = DohObr(args.period, taxpayer)
@@ -380,6 +368,9 @@ def main():
     parser.add_argument(
         "--correction", help="Is this a correction?", action="store_true"
     )
+    parser.add_argument(
+        "--taxpayer", help="Path to the taxpayer xml file", required=False
+    )
     args = parser.parse_args()
 
     # Download fresh currency data if needed
@@ -395,13 +386,17 @@ def main():
         company_cache.flush()
     country_cache = CountryCache("country_cache.xml")
 
+    # Load taxpayer data
+    taxpayer = Taxpayer(args)
+    taxpayer.get_input()
+
     # Process based on input
     if args.dividends:
-        dividends(args, company_cache, country_cache)
+        dividends(args, taxpayer, company_cache, country_cache)
     elif args.gains:
-        gains(args)
+        gains(args, taxpayer)
     elif args.interest:
-        interest(args)
+        interest(args, taxpayer)
     else:
         print("No input file provided")
         sys.exit(1)
