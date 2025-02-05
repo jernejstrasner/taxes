@@ -2,17 +2,17 @@ import argparse
 import sys
 
 import pandas as pd
-from lxml.builder import ElementMaker
 import requests
+from lxml.builder import ElementMaker
 
-from currency import Currency
 from cache import CompanyCache, CountryCache
+from cache_utils import cache_daily
+from currency import Currency
 from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
+from interest import DohObr, Interest, InterestType
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
-from cache_utils import cache_daily
-from interest import DohObr, Interest, InterestType
 
 
 def dividends(args, company_cache, country_cache):
@@ -126,7 +126,12 @@ def dividends(args, company_cache, country_cache):
     taxpayer.get_input()
 
     # Write the final XML file
-    xml = XML(taxpayer, furs_df, args.output or "data/dividends_furs.xml", args.correction)
+    xml = XML(
+        taxpayer,
+        furs_df.to_frame(),
+        args.output or "data/dividends_furs.xml",
+        args.correction,
+    )
     xml.write()
     xml.verify("data/Doh_Div_3.xsd")
 
@@ -311,7 +316,7 @@ def interest(args):
         if row["Account Currency"].startswith("USD"):
             row["Interest amount "] = row["Interest amount "] / currency.get_rate(
                 row["Date"].date(),  # Convert Timestamp to datetime.date
-                "USD"
+                "USD",
             )
         interest = Interest(
             row["Date"].strftime("%Y-%m-%d"),
