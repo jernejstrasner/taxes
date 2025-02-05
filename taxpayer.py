@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 
 from lxml import etree
 
@@ -20,16 +20,16 @@ class Taxpayer:
         try:
             tree = etree.parse(self.path)  # type: ignore
             root = tree.getroot()
-            for key in asdict(self).keys():
+            for field in fields(self):
                 try:
-                    setattr(self, key, root.findtext(key))
+                    setattr(self, field.name, root.findtext(field.name))
                 except AttributeError:
-                    value = input(f"Enter your {key}: ")
-                    setattr(self, key, value)
+                    value = input(f"Enter your {field.name}: ")
+                    setattr(self, field.name, value)
         except OSError:
-            for key in asdict(self).keys():
-                value = input(f"Enter your {key}: ")
-                setattr(self, key, value)
+            for field in fields(self):
+                value = input(f"Enter your {field.name}: ")
+                setattr(self, field.name, value)
 
     def save(self):
         with etree.xmlfile(self.path, encoding="utf-8") as xf:
