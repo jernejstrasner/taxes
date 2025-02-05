@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
+
 @dataclass
 class KDVPSecurity:
     date: str
@@ -28,19 +29,29 @@ class KDVPItem:
     def update_trade(self, trade: KDVPSecurityOpen | KDVPSecurityClose) -> bool:
         # Check if a trade with the same date and price already exists and join them
         for s in self.securities:
-            if s.date == trade.date and s.value == trade.value and isinstance(s, type(trade)):
-                if isinstance(s, KDVPSecurityOpen) and s.acquisition_type == trade.acquisition_type:
+            if (
+                s.date == trade.date
+                and s.value == trade.value
+                and isinstance(s, type(trade))
+            ):
+                if (
+                    isinstance(s, KDVPSecurityOpen)
+                    and s.acquisition_type == trade.acquisition_type  # type: ignore
+                ):
                     s.quantity += trade.quantity
                     return True
-                if isinstance(s, KDVPSecurityClose) and s.loss_transfer == trade.loss_transfer:
+                if (
+                    isinstance(s, KDVPSecurityClose)
+                    and s.loss_transfer == trade.loss_transfer  # type: ignore
+                ):
                     s.quantity += trade.quantity
                     return True
         return False
 
     def add_trade(self, trade: KDVPSecurityOpen | KDVPSecurityClose):
         if not self.update_trade(trade):
-          self.securities.append(trade)
-          self.securities.sort(key=lambda x: x.date, reverse=False)
+            self.securities.append(trade)
+            self.securities.sort(key=lambda x: x.date, reverse=False)
         # Now go through and calculate the total stock value for each date
         stock = 0
         for s in self.securities:
@@ -60,7 +71,12 @@ class DohKDVP:
     # WARNING: The way the trades are exported from Saxo and then imported to FURS it complicates
     # handling of opening and closing positions. This is a simple way to handle it which
     # might not work for some cases.
-    def add_trade(self, symbol: str, trade: KDVPSecurityOpen | KDVPSecurityClose, is_fond: bool = False):
+    def add_trade(
+        self,
+        symbol: str,
+        trade: KDVPSecurityOpen | KDVPSecurityClose,
+        is_fond: bool = False,
+    ):
         if symbol not in self.items:
             self.items[symbol] = KDVPItem(symbol, is_fond, [])
         self.items[symbol].add_trade(trade)
