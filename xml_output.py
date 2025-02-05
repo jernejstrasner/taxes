@@ -68,11 +68,12 @@ class XML:
     def verify(self, schema_path: str):
         self.xml.verify(schema_path)
 
+
 class XMLWriter:
     def __init__(self, path: str) -> None:
         self.path = path
 
-    def write(self, element: etree.Element):
+    def write(self, element: etree.Element):  # type: ignore
         # Write the xml to a file pretty printed with an xml declaration
         with etree.xmlfile(self.path, encoding="utf-8") as xf:
             xf.write_declaration()
