@@ -1,9 +1,11 @@
 from dataclasses import dataclass
-from typing import Optional, Literal
 from enum import Enum
-from taxpayer import Taxpayer
+from typing import Literal, Optional
+
 from lxml.builder import ElementMaker
 from lxml.etree import ElementBase
+
+from taxpayer import Taxpayer
 
 
 class InterestType(Enum):

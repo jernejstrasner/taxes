@@ -388,7 +388,6 @@ def main():
 
     # Load taxpayer data
     taxpayer = Taxpayer(args)
-    taxpayer.get_input()
 
     # Process based on input
     if args.dividends:
