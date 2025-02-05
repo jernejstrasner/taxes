@@ -1,20 +1,19 @@
 from dataclasses import asdict, dataclass
-from typing import Optional
 
 from lxml import etree
 
 
 @dataclass
 class Taxpayer:
-    taxNumber: Optional[str] = None
-    name: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    postNumber: Optional[str] = None
-    postName: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    birthDate: Optional[str] = None
+    taxNumber: str
+    name: str
+    address: str
+    city: str
+    postNumber: str
+    postName: str
+    email: str
+    phone: str
+    birthDate: str
 
     def __init__(self, args):
         self.path = args.taxpayer or "cache/taxpayer.xml"
