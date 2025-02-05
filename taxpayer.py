@@ -1,19 +1,20 @@
-import dataclasses
+from dataclasses import asdict, dataclass
+from typing import Optional
 
 from lxml import etree
 
 
-@dataclasses.dataclass
+@dataclass
 class Taxpayer:
-    taxNumber: str
-    name: str
-    address: str
-    city: str
-    postNumber: str
-    postName: str
-    email: str
-    phone: str
-    birthDate: str
+    taxNumber: Optional[str] = None
+    name: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postNumber: Optional[str] = None
+    postName: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    birthDate: Optional[str] = None
 
     def __init__(self, args):
         self.path = args.taxpayer or "cache/taxpayer.xml"
@@ -30,22 +31,13 @@ class Taxpayer:
             self.phone = root.findtext("phone")
             self.birthDate = root.findtext("birthDate")
         except (OSError, AttributeError):
-            self.taxNumber = None
-            self.name = None
-            self.address = None
-            self.city = None
-            self.postNumber = None
-            self.postName = None
-            self.email = None
-            self.phone = None
-            self.birthDate = None
             self.get_input()
 
     def save(self):
         with etree.xmlfile(self.path, encoding="utf-8") as xf:
             xf.write_declaration()
             root = etree.Element("taxpayer")
-            for key, value in dataclasses.asdict(self).items():
+            for key, value in asdict(self).items():
                 el = etree.SubElement(root, key)
                 el.text = value
             xf.write(root, pretty_print=True)
