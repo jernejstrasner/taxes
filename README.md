@@ -1,6 +1,6 @@
-# Dividends FURS
+# FURS Taxes
 
-This is a Python script that calculates the tax on dividends according to the regulations of the Financial Administration of the Republic of Slovenia (FURS).
+This is a Python script that calculates the tax on dividends, interest and gains according to the regulations of the Financial Administration of the Republic of Slovenia (FURS).
 Currently only `xlsx` exports from Saxo Bank are supported.
 
 ## Prerequisites
@@ -10,7 +10,7 @@ Currently only `xlsx` exports from Saxo Bank are supported.
 ## Installation
 
 1. Clone the repository or download the .zip archive of the code
-2. Run `make bootstrap`
+2. Install the dependencies using `pip install -r requirements.txt`
 
 ## Usage
 
@@ -18,16 +18,9 @@ Currently only `xlsx` exports from Saxo Bank are supported.
 2. Run the script using the following command:
 
 ```shell
-python3 taxes.py <dividends.xlsx> --additional-info <additional_info.xlsx> --output <doh_div.xml>
+usage: taxes.py [-h] (--saxo-dividends SAXO_DIVIDENDS | --saxo-gains SAXO_GAINS | --saxo-interest SAXO_INTEREST) [--period PERIOD]
+                [--additional-info ADDITIONAL_INFO] [--output OUTPUT] [--correction] [--taxpayer TAXPAYER]
 ```
-
-## Description of options
-
-- `<dividends.xlsx>`: This is the input file containing the dividends data. Replace `<dividends.xlsx>` with the actual path or name of your dividends file. For example, `python3 taxes.py dividends_data.xlsx`.
-
-- `--additional-info <additional_info.xlsx>`: This option is used to provide additional information related to the dividends (like ISIN numbers). Replace `<additional_info.xlsx>` with the actual path or name of your additional info file. For example, `--additional-info info.xlsx`.
-
-- `--output <doh_div.xml>`: This option determines the output file name for the calculated tax data in XML format. Replace `<doh_div.xml>` with the desired name of your output file. For example, `--output tax_data.xml`.
 
 ## Contributing
 
