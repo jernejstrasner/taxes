@@ -1,10 +1,11 @@
+import datetime
 from dataclasses import dataclass
 from typing import Literal
 
 
 @dataclass
 class KDVPSecurity:
-    date: str
+    date: datetime.date
     quantity: int
     value: float
     stock: int

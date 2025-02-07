@@ -38,12 +38,11 @@ def dividends(args, taxpayer, company_cache, country_cache):
     furs_df["PayerCountry"] = None
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-    furs_df["Date"] = pd.to_datetime(furs_df["Date"], format="%d-%b-%Y").dt.strftime(
-        "%Y-%m-%d"
-    )
+    furs_df["Date"] = pd.to_datetime(furs_df["Date"], format="%d-%b-%Y")
 
     # Get the exchange rate for the dates in the Date column
-    currency = Currency(furs_df["Date"].unique(), ["USD", "CAD"])
+    dates = [d.date() for d in furs_df["Date"].unique()]
+    currency = Currency(dates, ["USD", "CAD"])
 
     finance_data = FinanceData(company_cache)
     symbols = furs_df["Symbol"].unique()
@@ -53,10 +52,10 @@ def dividends(args, taxpayer, company_cache, country_cache):
         # Dividend amount
         if row["Value"].startswith("USD"):
             value = float(row["Value"].replace("USD", ""))
-            row["Value"] = value / currency.get_rate(row["Date"], "USD")
+            row["Value"] = value / currency.get_rate(row["Date"].date(), "USD")
         elif row["Value"].startswith("CAD"):
             value = float(row["Value"].replace("CAD", ""))
-            row["Value"] = value / currency.get_rate(row["Date"], "CAD")
+            row["Value"] = value / currency.get_rate(row["Date"].date(), "CAD")
         elif row["Value"].startswith("EUR"):
             row["Value"] = float(row["Value"].replace("EUR", ""))
         else:
@@ -66,10 +65,10 @@ def dividends(args, taxpayer, company_cache, country_cache):
         foreign_tax = row["ForeignTax"].lstrip(" +-")
         if foreign_tax.startswith("USD"):
             value = float(foreign_tax.replace("USD", ""))
-            row["ForeignTax"] = value / currency.get_rate(row["Date"], "USD")
+            row["ForeignTax"] = value / currency.get_rate(row["Date"].date(), "USD")
         elif foreign_tax.startswith("CAD"):
             value = float(foreign_tax.replace("CAD", ""))
-            row["ForeignTax"] = value / currency.get_rate(row["Date"], "CAD")
+            row["ForeignTax"] = value / currency.get_rate(row["Date"].date(), "CAD")
         elif foreign_tax.startswith("EUR"):
             row["ForeignTax"] = float(foreign_tax.replace("EUR", ""))
         else:
@@ -124,7 +123,7 @@ def dividends(args, taxpayer, company_cache, country_cache):
     # Write the final XML file
     xml = XML(
         taxpayer,
-        furs_df.to_frame(),
+        furs_df,
         args.output or "data/dividends_furs.xml",
         args.correction,
     )
@@ -138,27 +137,24 @@ def gains(args, taxpayer):
     print("Opened gains file: ", args.gains)
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-    df["Trade Date Open"] = pd.to_datetime(
-        df["Trade Date Open"], format="%d-%b-%Y"
-    ).dt.strftime("%Y-%m-%d")
-    df["Trade Date Close"] = pd.to_datetime(
-        df["Trade Date Close"], format="%d-%b-%Y"
-    ).dt.strftime("%Y-%m-%d")
+    df["Trade Date Open"] = pd.to_datetime(df["Trade Date Open"], format="%d-%b-%Y")
+    df["Trade Date Close"] = pd.to_datetime(df["Trade Date Close"], format="%d-%b-%Y")
 
     # Get the exchange rate for the dates in the Date column
     dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])
-    currency = Currency(dates.unique(), ["USD", "CAD"])
+    # Convert string dates to datetime.date objects before creating the set
+    currency = Currency([d.date() for d in list(set(dates))], ["USD", "CAD"])
 
     def process_row(row):
         # Process the currency of the trade
         conversion_open = 1
         conversion_close = 1
         if row["Instrument currency"] == "USD":
-            conversion_open = currency.get_rate(row["Trade Date Open"], "USD")
-            conversion_close = currency.get_rate(row["Trade Date Close"], "USD")
+            conversion_open = currency.get_rate(row["Trade Date Open"].date(), "USD")
+            conversion_close = currency.get_rate(row["Trade Date Close"].date(), "USD")
         elif row["Instrument currency"] == "CAD":
-            conversion_open = currency.get_rate(row["Trade Date Open"], "CAD")
-            conversion_close = currency.get_rate(row["Trade Date Close"], "CAD")
+            conversion_open = currency.get_rate(row["Trade Date Open"].date(), "CAD")
+            conversion_close = currency.get_rate(row["Trade Date Close"].date(), "CAD")
         row["Open Price"] = float(row["Open Price"]) / conversion_open
         row["Close Price"] = float(row["Close Price"]) / conversion_close
         # Clean up the symbol
@@ -177,16 +173,21 @@ def gains(args, taxpayer):
 
     # Output some informational info (e.g. the total amount of gains and losses)
     print("Number of trades: ", df.shape[0])
+    print("Total gains: ", df["Gain"].sum())
 
     # Convert the dataframe to typed DohKDVP objects
     doh_kdvp = DohKDVP()
     for i, row in df.iterrows():
         trade_open = KDVPSecurityOpen(
-            row["Trade Date Open"], row["QuantityOpen"], row["Open Price"], 0, "B"
+            row["Trade Date Open"].date(),
+            row["QuantityOpen"],
+            row["Open Price"],
+            0,
+            "B",
         )
         doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
         trade_close = KDVPSecurityClose(
-            row["Trade Date Close"],
+            row["Trade Date Close"].date(),
             row["QuantityClose"],
             row["Close Price"],
             0,
@@ -208,7 +209,7 @@ def gains(args, taxpayer):
                 EDP.address1(taxpayer.address),
                 EDP.city(taxpayer.city),
                 EDP.postNumber(taxpayer.postNumber),
-                EDP.birthDate(taxpayer.birthDate),
+                EDP.birthDate(taxpayer.get_birth_date().strftime("%Y-%m-%d")),
             ),
         ),
         EDP.AttachmentList(),
@@ -247,14 +248,14 @@ def gains(args, taxpayer):
                                 E.Row(
                                     E.ID(str(i)),
                                     E.Sale(
-                                        E.F6(trade.date),
+                                        E.F6(trade.date.strftime("%Y-%m-%d")),
                                         E.F7("{:.4f}".format(trade.quantity)),
                                         E.F9("{:.4f}".format(trade.value)),
                                         E.F10("true"),
                                     )
                                     if isinstance(trade, KDVPSecurityClose)
                                     else E.Purchase(
-                                        E.F1(trade.date),
+                                        E.F1(trade.date.strftime("%Y-%m-%d")),
                                         E.F2(trade.acquisition_type),
                                         E.F3("{:.4f}".format(trade.quantity)),
                                         E.F4("{:.4f}".format(trade.value)),

@@ -93,4 +93,16 @@
     <isin>US6745991058</isin>
     <address>Oxy 5 Greenway Plaza, Suite 110. Houston, Texas 77046-0521</address>
   </item>
+  <item id="GOOG:xnas">
+    <address>1600 Amphitheatre Parkway, Mountain View, CA, 94043</address>
+    <isin>US02079K1079</isin>
+  </item>
+  <item id="RHMG:xetr">
+    <isin>DE0007030009</isin>
+    <address>Rheinmetall Platz 1, Düsseldorf, 40476, Germany</address>
+  </item>
+  <item id="XDPD:xetr">
+    <isin>IE00BGJWX091</isin>
+    <address>78 Sir John Rogerson's Quay, Dublin, D02 RK57, Ireland</address>
+  </item>
 </cache>

@@ -48,7 +48,7 @@ class XML:
                 ),
                 *[
                     E.Dividend(
-                        E.Date(row.Date),
+                        E.Date(row.Date.strftime("%Y-%m-%d")),  # type: ignore
                         E.PayerIdentificationNumber(row.PayerIdentificationNumber),
                         E.PayerName(row.PayerName),
                         E.PayerAddress(row.PayerAddress),

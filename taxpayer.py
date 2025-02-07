@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import asdict, dataclass, fields
 
 from lxml import etree
@@ -39,3 +40,6 @@ class Taxpayer:
                 el = etree.SubElement(root, key)
                 el.text = value
             xf.write(root, pretty_print=True)
+
+    def get_birth_date(self) -> datetime.date:
+        return datetime.datetime.strptime(self.birthDate, "%d.%m.%Y").date()
