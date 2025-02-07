@@ -17,8 +17,8 @@ from xml_output import XML, XMLWriter
 
 def dividends(args, taxpayer, company_cache, country_cache):
     # Open dividends xlsx file
-    df = pd.read_excel(args.saxo_dividends, sheet_name="Share Dividends")
-    print("Opened dividends file: ", args.saxo_dividends)
+    df = pd.read_excel(args.saxo, sheet_name="Share Dividends")
+    print("Opened dividends file: ", args.saxo)
 
     # Rename the columns
     furs_df = df.rename(
@@ -133,8 +133,8 @@ def dividends(args, taxpayer, company_cache, country_cache):
 
 def gains(args, taxpayer):
     # Open gains xlsx file
-    df = pd.read_excel(args.saxo_gains, sheet_name="ClosedPositions")
-    print("Opened gains file: ", args.saxo_gains)
+    df = pd.read_excel(args.saxo, sheet_name="ClosedPositions")
+    print("Opened gains file: ", args.saxo)
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
     df["Trade Date Open"] = pd.to_datetime(df["Trade Date Open"], format="%d-%b-%Y")
@@ -280,8 +280,8 @@ def gains(args, taxpayer):
 
 def interest(args, taxpayer):
     # Open interest xlsx file
-    df = pd.read_excel(args.saxo_interest, sheet_name="Interest Details")
-    print("Opened interest file: ", args.saxo_interest)
+    df = pd.read_excel(args.saxo, sheet_name="Interest Details")
+    print("Opened interest file: ", args.saxo)
 
     # Parse the date values in GMT and convert to CET/CEST accounting for DST
     df["Date"] = (
@@ -352,19 +352,27 @@ def download_schemas():
 def main():
     # Parse the arguments
     parser = argparse.ArgumentParser()
+
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--saxo-dividends", help="Path to the dividends xlsx file")
-    group.add_argument("--saxo-gains", help="Path to the gains xlsx file")
-    group.add_argument("--saxo-interest", help="Path to the interest xlsx file")
-    parser.add_argument("--period", help="Period of the interest", required=False)
+    group.add_argument("--dividends", action="store_true")
+    group.add_argument("--gains", action="store_true")
+    group.add_argument("--interest", action="store_true")
+
+    parser.add_argument("--saxo", help="Path to the Saxobank xlsx file")
+    parser.add_argument("--revolut", help="Path to the Revolut tax summary csv file")
+
     parser.add_argument(
         "--additional-info",
-        help="Path to the additional info xlsx file with ISINs and addresses of the payers",
+        help="Path to the additional info Saxobank xlsx file with ISINs and addresses of the payers",
         required=False,
     )
+
+    parser.add_argument("--period", help="Period of the tax report", required=False)
     parser.add_argument("--output", help="Path to the output xml file", required=False)
     parser.add_argument(
-        "--correction", help="Is this a correction?", action="store_true"
+        "--correction",
+        help="Is this a correction of an already submitted report?",
+        action="store_true",
     )
     parser.add_argument(
         "--taxpayer", help="Path to the taxpayer xml file", required=False
@@ -388,11 +396,11 @@ def main():
     taxpayer = Taxpayer(args)
 
     # Process based on input
-    if args.saxo_dividends:
+    if args.dividends:
         dividends(args, taxpayer, company_cache, country_cache)
-    elif args.saxo_gains:
+    elif args.gains:
         gains(args, taxpayer)
-    elif args.saxo_interest:
+    elif args.interest:
         interest(args, taxpayer)
     else:
         print("No input file provided")
