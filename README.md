@@ -14,16 +14,16 @@ Currently only `xlsx` exports from Saxo Bank are supported.
 
 ## Usage
 
-1. Navigate to the directory where the `dividends_furs.py` file is located in your terminal
+1. Navigate to the directory where the `taxes.py` file is located in your terminal
 2. Run the script using the following command:
 
-  ```shell
-  python3 dividends_furs.py <dividends.xlsx> --additional-info <additional_info.xlsx> --output <doh_div.xml>
-  ```
+```shell
+python3 taxes.py <dividends.xlsx> --additional-info <additional_info.xlsx> --output <doh_div.xml>
+```
 
 ## Description of options
 
-- `<dividends.xlsx>`: This is the input file containing the dividends data. Replace `<dividends.xlsx>` with the actual path or name of your dividends file. For example, `python3 dividends_furs.py dividends_data.xlsx`.
+- `<dividends.xlsx>`: This is the input file containing the dividends data. Replace `<dividends.xlsx>` with the actual path or name of your dividends file. For example, `python3 taxes.py dividends_data.xlsx`.
 
 - `--additional-info <additional_info.xlsx>`: This option is used to provide additional information related to the dividends (like ISIN numbers). Replace `<additional_info.xlsx>` with the actual path or name of your additional info file. For example, `--additional-info info.xlsx`.
 
