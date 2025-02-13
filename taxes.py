@@ -123,7 +123,7 @@ def dividends(args, taxpayer, company_cache, country_cache):
     # Write the final XML file
     xml = XML(
         taxpayer,
-        furs_df,
+        furs_df,  # type: ignore
         args.output or "data/dividends_furs.xml",
         args.correction,
     )
