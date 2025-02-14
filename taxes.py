@@ -10,7 +10,9 @@ from cache_utils import cache_daily
 from currency import Currency
 from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
-from interest import DohObr, Interest, InterestType
+from interest import DohObr
+from revolut import process_revolut_csv
+from saxobank import process_saxo_xlsx
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 
@@ -279,49 +281,22 @@ def gains(args, taxpayer):
 
 
 def interest(args, taxpayer):
-    # Open interest xlsx file
-    df = pd.read_excel(args.saxo, sheet_name="Interest Details")
-    print("Opened interest file: ", args.saxo)
-
-    # Parse the date values in GMT and convert to CET/CEST accounting for DST
-    df["Date"] = (
-        pd.to_datetime(df["Calculation dateGMT"], format="%d-%b-%Y")
-        .dt.tz_localize("GMT")  # Mark the time as GMT
-        .dt.tz_convert("Europe/Ljubljana")  # Convert to CET/CEST (Slovenia timezone)
-    )
-
     # Create a DohObr object
     doh_obr = DohObr(args.period, taxpayer)
 
-    # Get the exchange rate for the dates in the Date column
-    currency = Currency(
-        [d.date() for d in df["Date"].unique()],  # Convert Timestamp to datetime.date
-        ["USD"],
-    )
-
-    # Process the rows
-    for i, row in df.iterrows():
-        # We need to convert the interest amount to EUR if it's not already
-        if row["Account Currency"].startswith("USD"):
-            row["Interest amount "] = row["Interest amount "] / currency.get_rate(
-                row["Date"].date(),  # Convert Timestamp to datetime.date
-                "USD",
-            )
-        interest = Interest(
-            row["Date"].strftime("%Y-%m-%d"),
-            "15731249",
-            "Saxo Bank A/S",
-            "Philip Heymans Alle 15, 2900 Hellerup",
-            "DK",
-            InterestType.FUND_INTEREST,
-            row["Interest amount "],
-            "DK",
-        )
+    ### Saxobank
+    saxobank_interests = process_saxo_xlsx(args.saxo)
+    for interest in saxobank_interests:
         doh_obr.add_interest(interest)
 
-    # Write to console the total interest amount calculated in EUR
-    total_interest = round(sum([interest.value for interest in doh_obr.interests]), 2)
-    print("Total interest amount: ", total_interest, "EUR")
+    ### Revolut
+    revolut_interests = process_revolut_csv(args.revolut)
+    for interest in revolut_interests:
+        doh_obr.add_interest(interest)
+
+    # Condense the interests to one entry per payer
+    if args.condensed:
+        doh_obr.condense_interests()
 
     # Write the final XML file
     xml = XMLWriter(args.output or "data/interest_furs.xml")
@@ -357,6 +332,11 @@ def main():
     group.add_argument("--dividends", action="store_true")
     group.add_argument("--gains", action="store_true")
     group.add_argument("--interest", action="store_true")
+    parser.add_argument(
+        "--condensed",
+        action="store_true",
+        help="Condenses interest to one entry per payer",
+    )
 
     parser.add_argument("--saxo", help="Path to the Saxobank xlsx file")
     parser.add_argument("--revolut", help="Path to the Revolut tax summary csv file")

@@ -138,3 +138,47 @@ class DohObr:
         )
 
         return envelope
+
+    def condense_interests(self):
+        """
+        Condenses multiple interest entries from the same payer into a single entry.
+        The new entry will:
+        - Use the earliest date
+        - Sum all values
+        - Keep the same payer information
+        """
+        condensed = {}
+
+        for interest in self.interests:
+            key = (
+                interest.identification_number,
+                interest.name,
+                interest.address,
+                interest.country,
+                interest.type,
+                interest.country2,
+            )
+
+            if key in condensed:
+                # Update existing entry
+                existing = condensed[key]
+                # Keep the later date
+                if interest.date > existing.date:
+                    existing.date = interest.date
+                # Add the values
+                existing.value += interest.value
+            else:
+                # Create new entry
+                condensed[key] = Interest(
+                    interest.date,
+                    interest.identification_number,
+                    interest.name,
+                    interest.address,
+                    interest.country,
+                    interest.type,
+                    interest.value,
+                    interest.country2,
+                )
+
+        # Replace the interests list with condensed version
+        self.interests = list(condensed.values())
