@@ -1,5 +1,6 @@
 from lxml import etree
 import pandas as pd
+from isin_utils import validate_isin
 
 
 class Cache:
@@ -39,10 +40,12 @@ class CompanyCache(Cache):
         return self.memory.get(symbol, {}).get("isin")
 
     def set_isin(self, symbol, isin):
+        # Validate ISIN before storing
+        validated_isin = validate_isin(isin, f"symbol {symbol}")
         if symbol in self.memory:
-            self.memory[symbol]["isin"] = isin
+            self.memory[symbol]["isin"] = validated_isin
         else:
-            self.memory[symbol] = {"isin": isin}
+            self.memory[symbol] = {"isin": validated_isin}
 
     def get_address(self, symbol):
         return self.memory.get(symbol, {}).get("address")

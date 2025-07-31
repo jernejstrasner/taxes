@@ -16,6 +16,7 @@ from saxobank import process_saxo_xlsx
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 from date_utils import parse_pandas_date_column
+from isin_utils import prompt_for_isin
 
 
 def dividends(args, taxpayer, company_cache, country_cache):
@@ -81,7 +82,7 @@ def dividends(args, taxpayer, company_cache, country_cache):
         if not row["PayerIdentificationNumber"]:
             isin = finance_data.get_isin(row["Symbol"])
             if not isin:
-                isin = input("Enter the ISIN for {}: ".format(row["PayerName"]))
+                isin = prompt_for_isin(row["PayerName"])
                 company_cache.set_isin(row["Symbol"], isin)
             row["PayerIdentificationNumber"] = isin
         # Payer country

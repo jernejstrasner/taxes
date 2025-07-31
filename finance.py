@@ -1,5 +1,6 @@
 import yfinance as yf
 from cache import CompanyCache
+from isin_utils import validate_isin
 
 
 class FinanceData:
@@ -24,17 +25,21 @@ class FinanceData:
                     print("Address for", symbol, "is", address)
                 else:
                     print("Address not found for", symbol)
-            # Getting ISIN is unreliable. Sometimes it picks the wrong country/exchange.
-            # TODO: Add ability to also provide the exchange to the Ticker object and then correctly fetch the ISIN.
-            # isin = self.cache.get_isin(ticker.ticker)
-            # if not isin:
-            #   _isin = ticker.isin
-            #   if _isin and re.match(r'^[A-Z]{2}[A-Z0-9]{9}[0-9]$', _isin):
-            #     isin = _isin
-            #     self.cache.set_isin(symbol, isin)
-            #     print("ISIN for", symbol, "is", isin)
-            #   else:
-            #     print("ISIN not found for", symbol)
+            # Try to get ISIN from Yahoo Finance (unreliable but worth trying)
+            # Note: Sometimes picks wrong country/exchange, manual verification recommended
+            isin = self.cache.get_isin(symbol)
+            if not isin:
+                try:
+                    _isin = ticker.info.get('isin')
+                    if _isin:
+                        # Validate ISIN format and checksum
+                        validated_isin = validate_isin(_isin, f"Yahoo Finance for {symbol}")
+                        self.cache.set_isin(symbol, validated_isin)
+                        print(f"ISIN for {symbol} is {validated_isin} (from Yahoo Finance - please verify)")
+                    else:
+                        print(f"ISIN not found for {symbol} in Yahoo Finance")
+                except Exception as e:
+                    print(f"Could not validate ISIN for {symbol}: {e}")
 
     def get_isin(self, ticker):
         return self.cache.get_isin(ticker)
