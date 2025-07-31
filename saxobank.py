@@ -2,6 +2,7 @@ import pandas as pd
 
 from currency import Currency
 from interest import Interest, InterestType
+from date_utils import parse_pandas_date_column
 
 
 def process_saxo_xlsx(file_path) -> list[Interest]:
@@ -9,8 +10,9 @@ def process_saxo_xlsx(file_path) -> list[Interest]:
     df = pd.read_excel(file_path, sheet_name="Interest Details")
 
     # Parse the date values in GMT and convert to CET/CEST accounting for DST
+    df = parse_pandas_date_column(df, "Calculation dateGMT", ["%d-%b-%Y"], "Saxo interest date")
     df["Date"] = (
-        pd.to_datetime(df["Calculation dateGMT"], format="%d-%b-%Y")
+        df["Calculation dateGMT"]
         .dt.tz_localize("GMT")  # Mark the time as GMT
         .dt.tz_convert("Europe/Ljubljana")  # Convert to CET/CEST (Slovenia timezone)
     )

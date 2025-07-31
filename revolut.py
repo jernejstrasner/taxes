@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 
 from interest import Interest, InterestType
+from date_utils import parse_pandas_date_column
 
 
 def process_revolut_csv(file_path) -> list[Interest]:
@@ -16,7 +17,7 @@ def process_revolut_csv(file_path) -> list[Interest]:
 
     # Create explicit copies of the filtered DataFrames
     interest_df = df[df["Description"].str.contains("Interest PAID EUR")].copy()
-    interest_df["Date"] = pd.to_datetime(interest_df["Date"])
+    interest_df = parse_pandas_date_column(interest_df, "Date", None, "Revolut interest date")
     interest_df["Value"] = (
         interest_df["Value"].str.replace("€", "").str.replace(",", "").astype(float)
     )

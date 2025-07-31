@@ -15,6 +15,7 @@ from revolut import process_revolut_csv
 from saxobank import process_saxo_xlsx
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
+from date_utils import parse_pandas_date_column
 
 
 def dividends(args, taxpayer, company_cache, country_cache):
@@ -40,7 +41,7 @@ def dividends(args, taxpayer, company_cache, country_cache):
     furs_df["PayerCountry"] = None
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-    furs_df["Date"] = pd.to_datetime(furs_df["Date"], format="%d-%b-%Y")
+    furs_df = parse_pandas_date_column(furs_df, "Date", ["%d-%b-%Y"], "dividend payment")
 
     # Get the exchange rate for the dates in the Date column
     dates = [d.date() for d in furs_df["Date"].unique()]
@@ -139,8 +140,8 @@ def gains(args, taxpayer):
     print("Opened gains file: ", args.saxo)
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-    df["Trade Date Open"] = pd.to_datetime(df["Trade Date Open"], format="%d-%b-%Y")
-    df["Trade Date Close"] = pd.to_datetime(df["Trade Date Close"], format="%d-%b-%Y")
+    df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
+    df = parse_pandas_date_column(df, "Trade Date Close", ["%d-%b-%Y"], "trade close date")
 
     # Get the exchange rate for the dates in the Date column
     dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])

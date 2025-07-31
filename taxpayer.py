@@ -2,6 +2,7 @@ import datetime
 from dataclasses import asdict, dataclass, fields
 
 from lxml import etree
+from date_utils import parse_date
 
 
 @dataclass
@@ -42,4 +43,4 @@ class Taxpayer:
             xf.write(root, pretty_print=True)
 
     def get_birth_date(self) -> datetime.date:
-        return datetime.datetime.strptime(self.birthDate, "%d.%m.%Y").date()
+        return parse_date(self.birthDate, ["%d.%m.%Y"], "taxpayer birth date")

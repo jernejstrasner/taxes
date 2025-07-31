@@ -3,6 +3,7 @@ import requests
 import datetime
 import warnings
 import sys
+from date_utils import parse_date
 
 class Currency:
     @staticmethod
@@ -36,7 +37,11 @@ class Currency:
             for event, element in etree.iterparse(
                 "data/currency.xml", tag="{http://www.bsi.si}tecajnica"
             ):
-            date = datetime.datetime.strptime(element.attrib["datum"], "%Y-%m-%d").date()
+            try:
+                date = parse_date(element.attrib["datum"], ["%Y-%m-%d"], "currency exchange rate")
+            except SystemExit:
+                element.clear()
+                continue
             currencies = {}
             for child in element if date in self.dates else []:
                 currency = child.attrib["oznaka"]
