@@ -17,6 +17,7 @@ from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 from date_utils import parse_pandas_date_column
 from isin_utils import prompt_for_isin
+from network_utils import download_or_exit, validate_download
 
 
 def dividends(args, taxpayer, company_cache, country_cache):
@@ -320,10 +321,15 @@ def download_schemas():
     schemas = ["Doh_Div_3.xsd", "Doh_KDVP_9.xsd", "EDP-Common-1.xsd", "Doh_Obr_2.xsd"]
     for schema in schemas:
         url = f"https://edavki.durs.si/Documents/Schemas/{schema}"
-        response = requests.get(url)
-        with open(f"data/{schema}", "wb") as f:
-            f.write(response.content)
-    print("Downloaded XML schemas")
+        download_or_exit(
+            url=url,
+            output_file=f"data/{schema}",
+            timeout=30,
+            max_retries=3,
+            context=f"FURS schema {schema}"
+        )
+        validate_download(f"data/{schema}", min_size=500, context=f"schema {schema}")
+    print("All XML schemas downloaded successfully")
 
 
 def main():

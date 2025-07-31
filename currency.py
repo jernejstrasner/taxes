@@ -4,14 +4,21 @@ import datetime
 import warnings
 import sys
 from date_utils import parse_date
+from network_utils import download_or_exit, validate_download
 
 class Currency:
     @staticmethod
     def download_currency():
         url = "https://www.bsi.si/_data/tecajnice/dtecbs-l.xml"
-        response = requests.get(url)
-        with open("data/currency.xml", "wb") as f:
-            f.write(response.content)
+        download_or_exit(
+            url=url,
+            output_file="data/currency.xml",
+            timeout=30,
+            max_retries=3,
+            context="Bank of Slovenia exchange rates"
+        )
+        validate_download("data/currency.xml", min_size=1000, context="currency data")
+        print("Currency exchange rates downloaded successfully")
 
     def __init__(self, dates: list[datetime.date], currencies: list[str]):
         # For the dates we need also all dates of the first past month of the earliest date

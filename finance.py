@@ -1,6 +1,7 @@
 import yfinance as yf
 from cache import CompanyCache
 from isin_utils import validate_isin
+import requests
 
 
 class FinanceData:
@@ -8,8 +9,15 @@ class FinanceData:
         self.cache = cache
 
     def fetch_info(self, symbols):
+        # Configure requests session with timeout for yfinance
+        session = requests.Session()
+        session.timeout = 30  # 30 second timeout
+        
         for symbol in symbols:
-            ticker = yf.Ticker(symbol.split(":")[0] if ":" in symbol else symbol)
+            ticker = yf.Ticker(
+                symbol.split(":")[0] if ":" in symbol else symbol,
+                session=session
+            )
             address = self.cache.get_address(symbol)
             if not address:
                 info = ticker.info
@@ -30,7 +38,9 @@ class FinanceData:
             isin = self.cache.get_isin(symbol)
             if not isin:
                 try:
-                    _isin = ticker.info.get('isin')
+                    # Add timeout protection for ticker.info call
+                    info = ticker.info
+                    _isin = info.get('isin')
                     if _isin:
                         # Validate ISIN format and checksum
                         validated_isin = validate_isin(_isin, f"Yahoo Finance for {symbol}")
@@ -38,8 +48,10 @@ class FinanceData:
                         print(f"ISIN for {symbol} is {validated_isin} (from Yahoo Finance - please verify)")
                     else:
                         print(f"ISIN not found for {symbol} in Yahoo Finance")
+                except requests.exceptions.Timeout:
+                    print(f"Timeout fetching data for {symbol} from Yahoo Finance")
                 except Exception as e:
-                    print(f"Could not validate ISIN for {symbol}: {e}")
+                    print(f"Could not fetch ISIN for {symbol} from Yahoo Finance: {e}")
 
     def get_isin(self, ticker):
         return self.cache.get_isin(ticker)
