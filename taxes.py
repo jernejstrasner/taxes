@@ -147,14 +147,23 @@ def dividends(args, taxpayer, company_cache, country_cache):
     print("Total foreign tax: ", total_foreign_tax, "EUR")
 
     # Write the final XML file
+    output_file = get_output_filename(
+        args.output, 
+        "dividends_furs", 
+        "dividends tax report",
+        use_timestamp=not args.no_timestamp
+    )
+    ensure_directory_exists(output_file)
+    
     xml = XML(
         taxpayer,
         furs_df,  # type: ignore
-        args.output or "data/dividends_furs.xml",
+        output_file,
         args.correction,
     )
     xml.write()
     xml.verify("data/Doh_Div_3.xsd")
+    print(f"Dividends tax report saved to: {output_file}")
 
 
 def gains(args, taxpayer):
@@ -313,9 +322,18 @@ def gains(args, taxpayer):
     )
 
     # Write the final XML file
-    xml = XMLWriter(args.output or "data/gains_furs.xml")
+    output_file = get_output_filename(
+        args.output, 
+        "gains_furs", 
+        "capital gains tax report",
+        use_timestamp=not args.no_timestamp
+    )
+    ensure_directory_exists(output_file)
+    
+    xml = XMLWriter(output_file)
     xml.write(envelope)
     xml.verify("data/Doh_KDVP_9.xsd")
+    print(f"Capital gains tax report saved to: {output_file}")
 
 
 def interest(args, taxpayer):
@@ -337,9 +355,18 @@ def interest(args, taxpayer):
         doh_obr.condense_interests()
 
     # Write the final XML file
-    xml = XMLWriter(args.output or "data/interest_furs.xml")
+    output_file = get_output_filename(
+        args.output, 
+        "interest_furs", 
+        "interest tax report",
+        use_timestamp=not args.no_timestamp
+    )
+    ensure_directory_exists(output_file)
+    
+    xml = XMLWriter(output_file)
     xml.write(doh_obr.to_xml())
     xml.verify("data/Doh_Obr_2.xsd")
+    print(f"Interest tax report saved to: {output_file}")
 
 
 @cache_daily("currency.cache")
@@ -392,6 +419,12 @@ def main():
 
     parser.add_argument("--period", help="Period of the tax report", required=False)
     parser.add_argument("--output", help="Path to the output xml file", required=False)
+    parser.add_argument(
+        "--no-timestamp", 
+        action="store_true", 
+        help="Don't add timestamp to output filenames (will overwrite existing files)",
+        required=False
+    )
     parser.add_argument(
         "--correction",
         help="Is this a correction of an already submitted report?",
