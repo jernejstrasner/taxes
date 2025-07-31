@@ -4,16 +4,31 @@ import pandas as pd
 
 from interest import Interest, InterestType
 from date_utils import parse_pandas_date_column
+from error_utils import file_error
 
 
 def process_revolut_csv(file_path) -> list[Interest]:
     # Skip the first 13 rows and use the column names from line 14
-    df = pd.read_csv(
-        file_path,
-        skiprows=13,  # Skip the first 13 rows
-        quoting=csv.QUOTE_MINIMAL,  # Handle quoted fields
-        # The column names should be: Date, Description, Value, Price per share, Quantity per share
-    )
+    try:
+        df = pd.read_csv(
+            file_path,
+            skiprows=13,  # Skip the first 13 rows
+            quoting=csv.QUOTE_MINIMAL,  # Handle quoted fields
+            # The column names should be: Date, Description, Value, Price per share, Quantity per share
+        )
+    except FileNotFoundError:
+        file_error(
+            "reading", file_path, "File not found",
+            [f"Check that the file path '{file_path}' is correct",
+             "Ensure the Revolut CSV file is in the expected location"]
+        )
+    except Exception as e:
+        file_error(
+            "reading", file_path, str(e),
+            ["Ensure the file is a valid CSV file",
+             "Check that the file has the expected Revolut format",
+             "Verify the file is not corrupted or in use by another program"]
+        )
 
     # Create explicit copies of the filtered DataFrames
     interest_df = df[df["Description"].str.contains("Interest PAID EUR")].copy()

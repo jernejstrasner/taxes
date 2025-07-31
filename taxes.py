@@ -18,12 +18,27 @@ from xml_output import XML, XMLWriter
 from date_utils import parse_pandas_date_column
 from isin_utils import prompt_for_isin
 from network_utils import download_or_exit, validate_download
+from error_utils import file_error, data_error
 
 
 def dividends(args, taxpayer, company_cache, country_cache):
     # Open dividends xlsx file
-    df = pd.read_excel(args.saxo, sheet_name="Share Dividends")
-    print("Opened dividends file: ", args.saxo)
+    try:
+        df = pd.read_excel(args.saxo, sheet_name="Share Dividends")
+        print("Opened dividends file: ", args.saxo)
+    except FileNotFoundError:
+        file_error(
+            "reading", args.saxo, "File not found",
+            [f"Check that the file path '{args.saxo}' is correct",
+             "Ensure the Saxo Bank Excel file is in the expected location"]
+        )
+    except Exception as e:
+        file_error(
+            "reading", args.saxo, str(e),
+            ["Ensure the file is a valid Excel file (.xlsx)",
+             "Check that the file contains a 'Share Dividends' sheet",
+             "Verify the file is not corrupted or password protected"]
+        )
 
     # Rename the columns
     furs_df = df.rename(
@@ -64,7 +79,10 @@ def dividends(args, taxpayer, company_cache, country_cache):
         elif row["Value"].startswith("EUR"):
             row["Value"] = float(row["Value"].replace("EUR", ""))
         else:
-            print("Currency not supported: ", row["Value"])
+            print(f"Error: Unsupported currency in dividend value: {row['Value']}")
+            print(f"This occurred for dividend from {row['PayerName']} on {row['Date']}")
+            print("Currently supported currencies: USD, CAD, EUR")
+            print("Please ensure your data uses one of these currencies or update the code")
             sys.exit(1)
         # Tax witheld at source
         foreign_tax = row["ForeignTax"].lstrip(" +-")
@@ -77,7 +95,10 @@ def dividends(args, taxpayer, company_cache, country_cache):
         elif foreign_tax.startswith("EUR"):
             row["ForeignTax"] = float(foreign_tax.replace("EUR", ""))
         else:
-            print("Currency not supported: ", row["ForeignTax"])
+            print(f"Error: Unsupported currency in foreign tax: {row['ForeignTax']}")
+            print(f"This occurred for dividend from {row['PayerName']} on {row['Date']}")
+            print("Currently supported currencies for foreign tax: USD, CAD, EUR")
+            print("Please check your Saxo Bank export format or update the code")
             sys.exit(1)
         # Payer identification number
         if not row["PayerIdentificationNumber"]:
@@ -138,8 +159,22 @@ def dividends(args, taxpayer, company_cache, country_cache):
 
 def gains(args, taxpayer):
     # Open gains xlsx file
-    df = pd.read_excel(args.saxo, sheet_name="ClosedPositions")
-    print("Opened gains file: ", args.saxo)
+    try:
+        df = pd.read_excel(args.saxo, sheet_name="ClosedPositions")
+        print("Opened gains file: ", args.saxo)
+    except FileNotFoundError:
+        file_error(
+            "reading", args.saxo, "File not found",
+            [f"Check that the file path '{args.saxo}' is correct",
+             "Ensure the Saxo Bank Excel file is in the expected location"]
+        )
+    except Exception as e:
+        file_error(
+            "reading", args.saxo, str(e),
+            ["Ensure the file is a valid Excel file (.xlsx)",
+             "Check that the file contains a 'ClosedPositions' sheet",
+             "Verify the file is not corrupted or password protected"]
+        )
 
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
     df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
@@ -391,7 +426,15 @@ def main():
     elif args.interest:
         interest(args, taxpayer)
     else:
-        print("No input file provided")
+        print("Error: No input file provided")
+        print("")
+        print("Please specify one of the following options:")
+        print("  --saxo FILE        Process Saxo Bank Excel file")
+        print("  --revolut FILE     Process Revolut CSV file")
+        print("  --download-schemas Download XML schemas from FURS")
+        print("  --download-currency Download currency rates from Bank of Slovenia")
+        print("")
+        print("Use --help for more information about available options")
         sys.exit(1)
 
     # Write the caches

@@ -3,11 +3,26 @@ import pandas as pd
 from currency import Currency
 from interest import Interest, InterestType
 from date_utils import parse_pandas_date_column
+from error_utils import file_error
 
 
 def process_saxo_xlsx(file_path) -> list[Interest]:
     # Open interest xlsx file
-    df = pd.read_excel(file_path, sheet_name="Interest Details")
+    try:
+        df = pd.read_excel(file_path, sheet_name="Interest Details")
+    except FileNotFoundError:
+        file_error(
+            "reading", file_path, "File not found",
+            [f"Check that the file path '{file_path}' is correct",
+             "Ensure the Saxo Bank Excel file is in the expected location"]
+        )
+    except Exception as e:
+        file_error(
+            "reading", file_path, str(e),
+            ["Ensure the file is a valid Excel file (.xlsx)",
+             "Check that the file contains an 'Interest Details' sheet",
+             "Verify the file is not corrupted or password protected"]
+        )
 
     # Parse the date values in GMT and convert to CET/CEST accounting for DST
     df = parse_pandas_date_column(df, "Calculation dateGMT", ["%d-%b-%Y"], "Saxo interest date")
