@@ -2,6 +2,7 @@ from lxml import etree
 import requests
 import datetime
 import warnings
+import sys
 
 class Currency:
     @staticmethod
@@ -31,18 +32,48 @@ class Currency:
 
     def get_currency(self):
         results = {}
-        for event, element in etree.iterparse(
-            "data/currency.xml", tag="{http://www.bsi.si}tecajnica"
-        ):
+        try:
+            for event, element in etree.iterparse(
+                "data/currency.xml", tag="{http://www.bsi.si}tecajnica"
+            ):
             date = datetime.datetime.strptime(element.attrib["datum"], "%Y-%m-%d").date()
             currencies = {}
             for child in element if date in self.dates else []:
                 currency = child.attrib["oznaka"]
                 if currency in self.currencies:
-                    currencies[currency] = float(child.text)
+                    try:
+                        rate = float(child.text)
+                        # Validate exchange rate is reasonable
+                        if rate <= 0:
+                            raise ValueError(f"Exchange rate for {currency} on {date} is not positive: {rate}")
+                        if rate > 10000:
+                            raise ValueError(f"Exchange rate for {currency} on {date} seems unreasonably high: {rate}")
+                        currencies[currency] = rate
+                    except ValueError as e:
+                        print(f"Error parsing exchange rate for {currency} on {date}: {e}")
+                        sys.exit(1)
             if len(currencies) > 0:
                 results[date] = currencies
-            element.clear()
+                element.clear()
+        except Exception as e:
+            print(f"Error parsing currency XML file: {e}")
+            print("Please ensure data/currency.xml exists and is valid")
+            sys.exit(1)
+        
+        # Validate we have data for required currencies
+        if not results:
+            print("Error: No currency data found in the XML file")
+            sys.exit(1)
+            
+        missing_currencies = set()
+        for date_data in results.values():
+            for currency in self.currencies:
+                if currency not in date_data:
+                    missing_currencies.add(currency)
+        
+        if missing_currencies:
+            print(f"Warning: Some currencies are missing from certain dates: {', '.join(missing_currencies)}")
+            
         return results
 
     def get_rate(self, date: datetime.date, currency: str) -> float:
@@ -58,6 +89,11 @@ class Currency:
                 date = earliest_date
             else:
                 date = max(earlier_dates)
+        if currency not in self.currency_data[date]:
+            available_currencies = list(self.currency_data[date].keys())
+            print(f"Error: Currency {currency} not found for date {date}")
+            print(f"Available currencies for this date: {', '.join(available_currencies)}")
+            sys.exit(1)
         return self.currency_data[date][currency]
 
 
