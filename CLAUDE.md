@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FURS Taxes is a Python tool that generates XML tax reports for the Slovenian Financial Administration (FURS). It processes financial data from brokers (Saxo Bank, Revolut) and outputs validated XML for:
+FURS Taxes is a Python tool that generates XML tax reports for the Slovenian Financial Administration (FURS). It processes financial data from brokers (Saxo Bank, Revolut, IBKR) and outputs validated XML for:
 - **Doh_Div**: Dividend income reports
 - **Doh_KDVP**: Capital gains/losses from securities
 - **Doh_Obr**: Interest income reports
@@ -24,8 +24,9 @@ uv run pytest tests/
 # Generate dividend report
 uv run python taxes.py --dividends --saxo path/to/export.xlsx
 
-# Generate capital gains report
+# Generate capital gains report (Saxo or IBKR)
 uv run python taxes.py --gains --saxo path/to/export.xlsx
+uv run python taxes.py --gains --ibkr path/to/flexquery.xml
 
 # Generate interest report (Saxo or Revolut)
 uv run python taxes.py --interest --saxo path/to/export.xlsx
@@ -44,7 +45,7 @@ uv run python taxes.py --interest --revolut path/to/export.csv
 
 ### Data Flow
 ```
-Broker Export → Parse (saxobank.py/revolut.py) → Domain Models →
+Broker Export → Parse (saxobank.py/revolut.py/ibkr.py) → Domain Models →
   Fetch External Data (finance.py, currency.py) → Generate XML (xml_output.py) →
   Validate Against XSD → Write Output
 ```
@@ -56,6 +57,7 @@ Broker Export → Parse (saxobank.py/revolut.py) → Domain Models →
 | `taxes.py` | CLI entry point, orchestrates report generation |
 | `saxobank.py` | Parses Saxo Bank Excel exports |
 | `revolut.py` | Parses Revolut CSV exports |
+| `ibkr.py` | Parses IBKR Flex Query XML exports (capital gains only) |
 | `xml_output.py` | Generates FURS-compliant XML with namespace handling |
 | `finance.py` | Fetches company info/ISINs from Yahoo Finance |
 | `currency.py` | Downloads EUR exchange rates from Bank of Slovenia |

@@ -10,6 +10,7 @@ from cache_utils import cache_daily
 from currency import Currency
 from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
+from ibkr import process_ibkr_xml, ibkr_trades_to_kdvp
 from interest import DohObr
 from revolut import process_revolut_csv
 from saxobank import process_saxo_xlsx
@@ -173,91 +174,99 @@ def dividends(args, taxpayer, company_cache, country_cache):
 
 
 def gains(args, taxpayer):
-    # Open gains xlsx file
-    try:
-        df = pd.read_excel(args.saxo, sheet_name="ClosedPositions")
-        print("Opened gains file: ", args.saxo)
-    except FileNotFoundError:
-        file_error(
-            "reading", args.saxo, "File not found",
-            [f"Check that the file path '{args.saxo}' is correct",
-             "Ensure the Saxo Bank Excel file is in the expected location"]
-        )
-    except Exception as e:
-        file_error(
-            "reading", args.saxo, str(e),
-            ["Ensure the file is a valid Excel file (.xlsx)",
-             "Check that the file contains a 'ClosedPositions' sheet",
-             "Verify the file is not corrupted or password protected"]
-        )
+    doh_kdvp = DohKDVP()
+    trade_count = 0
 
-    # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
-    df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
-    df = parse_pandas_date_column(df, "Trade Date Close", ["%d-%b-%Y"], "trade close date")
+    # Process IBKR trades if provided
+    if args.ibkr:
+        ibkr_trades = process_ibkr_xml(args.ibkr)
+        kdvp_trades = ibkr_trades_to_kdvp(ibkr_trades)
+        for isin, trade, is_fond in kdvp_trades:
+            doh_kdvp.add_trade(isin, trade, is_fond)
+        trade_count += len(ibkr_trades)
 
-    # Validate that close dates are not before open dates
-    invalid_dates = df[df["Trade Date Close"] < df["Trade Date Open"]]
-    if not invalid_dates.empty:
-        print("Error: Found trades where close date is before open date:")
-        for _, row in invalid_dates.iterrows():
-            print(f"  - {row['Instrument Symbol']}: opened {row['Trade Date Open'].date()}, closed {row['Trade Date Close'].date()}")
-        print("Please check your Saxo Bank export for data errors")
+    # Process Saxo trades if provided
+    if args.saxo:
+        try:
+            df = pd.read_excel(args.saxo, sheet_name="ClosedPositions")
+            print("Opened gains file: ", args.saxo)
+        except FileNotFoundError:
+            file_error(
+                "reading", args.saxo, "File not found",
+                [f"Check that the file path '{args.saxo}' is correct",
+                 "Ensure the Saxo Bank Excel file is in the expected location"]
+            )
+        except Exception as e:
+            file_error(
+                "reading", args.saxo, str(e),
+                ["Ensure the file is a valid Excel file (.xlsx)",
+                 "Check that the file contains a 'ClosedPositions' sheet",
+                 "Verify the file is not corrupted or password protected"]
+            )
+
+        df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
+        df = parse_pandas_date_column(df, "Trade Date Close", ["%d-%b-%Y"], "trade close date")
+
+        invalid_dates = df[df["Trade Date Close"] < df["Trade Date Open"]]
+        if not invalid_dates.empty:
+            print("Error: Found trades where close date is before open date:")
+            for _, row in invalid_dates.iterrows():
+                print(f"  - {row['Instrument Symbol']}: opened {row['Trade Date Open'].date()}, closed {row['Trade Date Close'].date()}")
+            print("Please check your Saxo Bank export for data errors")
+            sys.exit(1)
+
+        dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])
+        currency = Currency([d.date() for d in list(set(dates))], ["USD", "CAD"])
+
+        def process_row(row):
+            conversion_open = 1
+            conversion_close = 1
+            if row["Instrument currency"] == "USD":
+                conversion_open = currency.get_rate(row["Trade Date Open"].date(), "USD")
+                conversion_close = currency.get_rate(row["Trade Date Close"].date(), "USD")
+            elif row["Instrument currency"] == "CAD":
+                conversion_open = currency.get_rate(row["Trade Date Open"].date(), "CAD")
+                conversion_close = currency.get_rate(row["Trade Date Close"].date(), "CAD")
+            row["Open Price"] = float(row["Open Price"]) / conversion_open
+            row["Close Price"] = float(row["Close Price"]) / conversion_close
+            row["Symbol"] = row["Instrument Symbol"].split(":")[0]
+            row["QuantityOpen"] = float(row["Quantity Open"])
+            row["QuantityClose"] = abs(float(row["QuantityClose"]))
+            row["Gain"] = (row["QuantityClose"] * row["Close Price"]) - (
+                row["QuantityOpen"] * row["Open Price"]
+            )
+            return row
+
+        df = df.apply(process_row, axis=1)
+
+        print("Number of Saxo trades: ", df.shape[0])
+        print("Total Saxo gains: ", df["Gain"].sum())
+
+        for i, row in df.iterrows():
+            trade_open = KDVPSecurityOpen(
+                row["Trade Date Open"].date(),
+                row["QuantityOpen"],
+                row["Open Price"],
+                0,
+                "B",
+            )
+            doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
+            trade_close = KDVPSecurityClose(
+                row["Trade Date Close"].date(),
+                row["QuantityClose"],
+                row["Close Price"],
+                0,
+                row["Gain"] < 0,
+            )
+            doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
+        trade_count += df.shape[0]
+
+    if trade_count == 0:
+        print("Error: No trades to process")
+        print("Please provide at least one of: --saxo or --ibkr")
         sys.exit(1)
 
-    # Get the exchange rate for the dates in the Date column
-    dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])
-    # Convert string dates to datetime.date objects before creating the set
-    currency = Currency([d.date() for d in list(set(dates))], ["USD", "CAD"])
-
-    def process_row(row):
-        # Process the currency of the trade
-        conversion_open = 1
-        conversion_close = 1
-        if row["Instrument currency"] == "USD":
-            conversion_open = currency.get_rate(row["Trade Date Open"].date(), "USD")
-            conversion_close = currency.get_rate(row["Trade Date Close"].date(), "USD")
-        elif row["Instrument currency"] == "CAD":
-            conversion_open = currency.get_rate(row["Trade Date Open"].date(), "CAD")
-            conversion_close = currency.get_rate(row["Trade Date Close"].date(), "CAD")
-        row["Open Price"] = float(row["Open Price"]) / conversion_open
-        row["Close Price"] = float(row["Close Price"]) / conversion_close
-        # Clean up the symbol
-        row["Symbol"] = row["Instrument Symbol"].split(":")[0]
-        # Clean up quantities
-        row["QuantityOpen"] = float(row["Quantity Open"])
-        row["QuantityClose"] = abs(float(row["QuantityClose"]))
-        # Gain
-        row["Gain"] = (row["QuantityClose"] * row["Close Price"]) - (
-            row["QuantityOpen"] * row["Open Price"]
-        )
-        return row
-
-    # Process the rows (convert currencies, get missing data from the user, etc.)
-    df = df.apply(process_row, axis=1)
-
-    # Output some informational info (e.g. the total amount of gains and losses)
-    print("Number of trades: ", df.shape[0])
-    print("Total gains: ", df["Gain"].sum())
-
-    # Convert the dataframe to typed DohKDVP objects
-    doh_kdvp = DohKDVP()
-    for i, row in df.iterrows():
-        trade_open = KDVPSecurityOpen(
-            row["Trade Date Open"].date(),
-            row["QuantityOpen"],
-            row["Open Price"],
-            0,
-            "B",
-        )
-        doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
-        trade_close = KDVPSecurityClose(
-            row["Trade Date Close"].date(),
-            row["QuantityClose"],
-            row["Close Price"],
-            0,
-            row["Gain"] < 0,
-        )
-        doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
+    print(f"Total securities: {len(doh_kdvp.items)}")
 
     # Generate the XML structure
     EDP_NS = "http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd"
@@ -288,7 +297,7 @@ def gains(args, taxpayer):
                     E.PeriodEnd(str(pd.Timestamp.now().year - 1) + "-12-31"),
                     E.IsResident("true"),
                     E.TelephoneNumber(taxpayer.phone),
-                    E.SecurityCount(str(df.shape[0])),
+                    E.SecurityCount(str(len(doh_kdvp.items))),
                     E.SecurityShortCount("0"),
                     E.SecurityWithContractCount("0"),
                     E.SecurityWithContractShortCount("0"),
@@ -310,7 +319,7 @@ def gains(args, taxpayer):
                             E.IsFond(str(item.is_fond).lower()),
                             *[
                                 E.Row(
-                                    E.ID(str(i)),
+                                    E.ID(str(j)),
                                     E.Sale(
                                         E.F6(trade.date.strftime("%Y-%m-%d")),
                                         E.F7("{:.4f}".format(trade.quantity)),
@@ -326,7 +335,7 @@ def gains(args, taxpayer):
                                     ),
                                     E.F8("{:.4f}".format(trade.stock)),
                                 )
-                                for i, trade in enumerate(item.securities)
+                                for j, trade in enumerate(item.securities)
                             ],
                         ),
                     )
@@ -336,15 +345,14 @@ def gains(args, taxpayer):
         ),
     )
 
-    # Write the final XML file
     output_file = get_output_filename(
-        args.output, 
-        "gains_furs", 
+        args.output,
+        "gains_furs",
         "capital gains tax report",
         use_timestamp=not args.no_timestamp
     )
     ensure_directory_exists(output_file)
-    
+
     xml = XMLWriter(output_file)
     xml.write(envelope)
     xml.verify("data/Doh_KDVP_9.xsd")
@@ -425,6 +433,7 @@ def main():
 
     parser.add_argument("--saxo", help="Path to the Saxobank xlsx file")
     parser.add_argument("--revolut", help="Path to the Revolut tax summary csv file")
+    parser.add_argument("--ibkr", help="Path to the IBKR Flex Query XML file")
 
     parser.add_argument(
         "--additional-info",
