@@ -19,6 +19,7 @@ from date_utils import parse_pandas_date_column
 from isin_utils import prompt_for_isin
 from network_utils import download_or_exit, validate_download
 from error_utils import file_error, data_error
+from file_utils import get_output_filename, ensure_directory_exists
 
 
 def dividends(args, taxpayer, company_cache, country_cache):
@@ -84,8 +85,13 @@ def dividends(args, taxpayer, company_cache, country_cache):
             print("Currently supported currencies: USD, CAD, EUR")
             print("Please ensure your data uses one of these currencies or update the code")
             sys.exit(1)
-        # Tax witheld at source
-        foreign_tax = row["ForeignTax"].lstrip(" +-")
+        # Tax withheld at source
+        if pd.isna(row["ForeignTax"]) or row["ForeignTax"] is None:
+            print(f"Error: Missing foreign tax value for dividend from {row['PayerName']} on {row['Date']}")
+            print("Expected format: currency code followed by amount (e.g., 'USD 10.00')")
+            print("If no tax was withheld, the field should contain 'USD 0' or similar, not be empty")
+            sys.exit(1)
+        foreign_tax = str(row["ForeignTax"]).lstrip(" +-")
         if foreign_tax.startswith("USD"):
             value = float(foreign_tax.replace("USD", ""))
             row["ForeignTax"] = value / currency.get_rate(row["Date"].date(), "USD")
@@ -188,6 +194,15 @@ def gains(args, taxpayer):
     # Parse the date values in the Date column and convert them to the format YYYY-MM-DD
     df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
     df = parse_pandas_date_column(df, "Trade Date Close", ["%d-%b-%Y"], "trade close date")
+
+    # Validate that close dates are not before open dates
+    invalid_dates = df[df["Trade Date Close"] < df["Trade Date Open"]]
+    if not invalid_dates.empty:
+        print("Error: Found trades where close date is before open date:")
+        for _, row in invalid_dates.iterrows():
+            print(f"  - {row['Instrument Symbol']}: opened {row['Trade Date Open'].date()}, closed {row['Trade Date Close'].date()}")
+        print("Please check your Saxo Bank export for data errors")
+        sys.exit(1)
 
     # Get the exchange rate for the dates in the Date column
     dates = list(df["Trade Date Open"]) + list(df["Trade Date Close"])

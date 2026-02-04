@@ -3,6 +3,75 @@ import datetime
 from gains import KDVPItem, KDVPSecurityOpen, KDVPSecurityClose, DohKDVP
 
 
+class TestFractionalShares:
+    """Tests for fractional share support."""
+
+    def test_fractional_quantity_open(self):
+        """Fractional shares should not be truncated."""
+        item = KDVPItem("AAPL", False, [])
+        trade = KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15),
+            quantity=10.5,
+            value=150.0,
+            stock=0,
+            acquisition_type="A"
+        )
+        item.add_trade(trade)
+
+        assert item.securities[0].quantity == 10.5
+        assert item.securities[0].stock == 10.5
+
+    def test_fractional_quantity_close(self):
+        """Fractional close quantities should work correctly."""
+        item = KDVPItem("AAPL", False, [])
+        item.add_trade(KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15),
+            quantity=10.5,
+            value=150.0,
+            stock=0,
+            acquisition_type="A"
+        ))
+        item.add_trade(KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15),
+            quantity=5.25,
+            value=160.0,
+            stock=0,
+            loss_transfer=False
+        ))
+
+        assert item.securities[0].stock == 10.5
+        assert item.securities[1].quantity == 5.25
+        assert item.securities[1].stock == 5.25  # 10.5 - 5.25
+
+    def test_fractional_stock_accumulation(self):
+        """Stock position should accumulate fractional shares correctly."""
+        item = KDVPItem("AAPL", False, [])
+        item.add_trade(KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15),
+            quantity=0.333,
+            value=150.0,
+            stock=0,
+            acquisition_type="A"
+        ))
+        item.add_trade(KDVPSecurityOpen(
+            date=datetime.date(2024, 2, 15),
+            quantity=0.333,
+            value=151.0,
+            stock=0,
+            acquisition_type="A"
+        ))
+        item.add_trade(KDVPSecurityOpen(
+            date=datetime.date(2024, 3, 15),
+            quantity=0.334,
+            value=152.0,
+            stock=0,
+            acquisition_type="A"
+        ))
+
+        # 0.333 + 0.333 + 0.334 = 1.0
+        assert abs(item.securities[2].stock - 1.0) < 0.0001
+
+
 class TestKDVPItemStockTracking:
     """Tests for running stock position calculation."""
 

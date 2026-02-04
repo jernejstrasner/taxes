@@ -165,8 +165,8 @@ class DohObr:
                 # Keep the later date
                 if interest.date > existing.date:
                     existing.date = interest.date
-                # Add the values
-                existing.value += interest.value
+                # Add the values (round to avoid float precision issues)
+                existing.value = round(existing.value + interest.value, 4)
             else:
                 # Create new entry
                 condensed[key] = Interest(

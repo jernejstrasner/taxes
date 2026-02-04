@@ -6,9 +6,9 @@ from typing import Literal
 @dataclass
 class KDVPSecurity:
     date: datetime.date
-    quantity: int
+    quantity: float
     value: float
-    stock: int
+    stock: float
 
 
 @dataclass

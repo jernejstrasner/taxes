@@ -263,5 +263,34 @@ class TestCondenseInterests:
         ))
         doh.condense_interests()
 
-        # 0.01 + 0.02 should be close to 0.03
-        assert abs(doh.interests[0].value - 0.03) < 0.0001
+        # 0.01 + 0.02 should be exactly 0.03 after rounding
+        assert doh.interests[0].value == 0.03
+
+    def test_rounding_to_four_decimals(self):
+        """Test that condensation rounds to 4 decimal places."""
+        doh = DohObr(2024, make_taxpayer())
+        # Add values with more than 4 decimal places
+        doh.add_interest(Interest(
+            date="2024-01-15",
+            identification_number="123456",
+            name="Test Bank",
+            address="Bank Street 1",
+            country="DK",
+            type=InterestType.FUND_INTEREST,
+            value=1.23456789,
+            country2="DK"
+        ))
+        doh.add_interest(Interest(
+            date="2024-02-15",
+            identification_number="123456",
+            name="Test Bank",
+            address="Bank Street 1",
+            country="DK",
+            type=InterestType.FUND_INTEREST,
+            value=2.34567891,
+            country2="DK"
+        ))
+        doh.condense_interests()
+
+        # Sum would be 3.5802468, rounded to 4 decimals = 3.5802
+        assert doh.interests[0].value == 3.5802
