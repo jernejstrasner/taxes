@@ -13,3 +13,8 @@ dependencies = [
     "xmlschema>=1.11.0",
     "yfinance>=0.2.52",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]

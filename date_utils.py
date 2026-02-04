@@ -21,16 +21,16 @@ def parse_date(date_value: Union[str, datetime.date, pd.Timestamp],
     Raises:
         SystemExit: If date cannot be parsed or is invalid
     """
-    # If already a date, just validate it
-    if isinstance(date_value, datetime.date):
-        validate_date(date_value, context)
-        return date_value
-    
-    # If pandas Timestamp, convert to date
+    # Check pd.Timestamp first since it's a subclass of datetime.date
     if isinstance(date_value, pd.Timestamp):
         date_obj = date_value.date()
         validate_date(date_obj, context)
         return date_obj
+
+    # If already a date, just validate it
+    if isinstance(date_value, datetime.date):
+        validate_date(date_value, context)
+        return date_value
     
     # Default formats if none provided
     if formats is None:
@@ -110,7 +110,7 @@ def parse_pandas_date_column(df: pd.DataFrame,
         if formats and len(formats) == 1:
             df[column] = pd.to_datetime(df[column], format=formats[0])
         else:
-            df[column] = pd.to_datetime(df[column], infer_datetime_format=True)
+            df[column] = pd.to_datetime(df[column])
         
         # Validate all dates
         for idx, date in df[column].items():

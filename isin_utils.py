@@ -77,9 +77,17 @@ def validate_isin_checksum(isin: str) -> bool:
         else:
             flattened.append(d)
     
-    # Apply Luhn algorithm
-    # Double every second digit from right to left
-    for i in range(len(flattened) - 2, -1, -2):
+    # Apply Luhn algorithm (ISIN variant per ISO 6166)
+    # For odd-length strings: double even indices (0, 2, 4, ...)
+    # For even-length strings: double odd indices (1, 3, 5, ...)
+    if len(flattened) % 2 == 1:
+        # Odd length: double indices 0, 2, 4, ...
+        indices_to_double = range(0, len(flattened), 2)
+    else:
+        # Even length: double indices 1, 3, 5, ...
+        indices_to_double = range(1, len(flattened), 2)
+
+    for i in indices_to_double:
         flattened[i] *= 2
         if flattened[i] > 9:
             flattened[i] -= 9

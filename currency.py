@@ -44,28 +44,28 @@ class Currency:
             for event, element in etree.iterparse(
                 "data/currency.xml", tag="{http://www.bsi.si}tecajnica"
             ):
-            try:
-                date = parse_date(element.attrib["datum"], ["%Y-%m-%d"], "currency exchange rate")
-            except SystemExit:
-                element.clear()
-                continue
-            currencies = {}
-            for child in element if date in self.dates else []:
-                currency = child.attrib["oznaka"]
-                if currency in self.currencies:
-                    try:
-                        rate = float(child.text)
-                        # Validate exchange rate is reasonable
-                        if rate <= 0:
-                            raise ValueError(f"Exchange rate for {currency} on {date} is not positive: {rate}")
-                        if rate > 10000:
-                            raise ValueError(f"Exchange rate for {currency} on {date} seems unreasonably high: {rate}")
-                        currencies[currency] = rate
-                    except ValueError as e:
-                        print(f"Error parsing exchange rate for {currency} on {date}: {e}")
-                        sys.exit(1)
-            if len(currencies) > 0:
-                results[date] = currencies
+                try:
+                    date = parse_date(element.attrib["datum"], ["%Y-%m-%d"], "currency exchange rate")
+                except SystemExit:
+                    element.clear()
+                    continue
+                currencies = {}
+                for child in element if date in self.dates else []:
+                    currency = child.attrib["oznaka"]
+                    if currency in self.currencies:
+                        try:
+                            rate = float(child.text)
+                            # Validate exchange rate is reasonable
+                            if rate <= 0:
+                                raise ValueError(f"Exchange rate for {currency} on {date} is not positive: {rate}")
+                            if rate > 10000:
+                                raise ValueError(f"Exchange rate for {currency} on {date} seems unreasonably high: {rate}")
+                            currencies[currency] = rate
+                        except ValueError as e:
+                            print(f"Error parsing exchange rate for {currency} on {date}: {e}")
+                            sys.exit(1)
+                if len(currencies) > 0:
+                    results[date] = currencies
                 element.clear()
         except Exception as e:
             print(f"Error parsing currency XML file: {e}")

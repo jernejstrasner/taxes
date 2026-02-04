@@ -18,6 +18,9 @@ uv sync
 # Run linter
 uv run ruff check .
 
+# Run tests
+uv run pytest tests/
+
 # Generate dividend report
 uv run python taxes.py --dividends --saxo path/to/export.xlsx
 
