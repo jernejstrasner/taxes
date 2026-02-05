@@ -1,6 +1,9 @@
+import sys
+
 import pandas as pd
 
 from currency import Currency
+from gains import DohKDVP, KDVPSecurityOpen, KDVPSecurityClose
 from interest import Interest, InterestType
 from date_utils import parse_pandas_date_column
 from error_utils import file_error
@@ -61,3 +64,48 @@ def process_saxo_xlsx(file_path) -> list[Interest]:
         )
         for _, row in df.iterrows()
     ]
+
+
+def saxo_trades_to_kdvp(
+    df: pd.DataFrame,
+    doh_kdvp: DohKDVP,
+):
+    """
+    Process Saxo ClosedPositions rows into KDVP trades.
+
+    Deduplicates close trades by ClosePositionId since Saxo repeats the
+    full close quantity on each row when a single sell closes multiple lots.
+    """
+    seen_close_ids = set()
+
+    for _, row in df.iterrows():
+        trade_open = KDVPSecurityOpen(
+            row["Trade Date Open"].date(),
+            row["QuantityOpen"],
+            row["Open Price"],
+            0,
+            "B",
+        )
+        doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
+
+        close_id = row["ClosePositionId"]
+        if close_id not in seen_close_ids:
+            seen_close_ids.add(close_id)
+
+            group = df[df["ClosePositionId"] == close_id]
+            close_quantities = group["QuantityClose"].unique()
+            if len(close_quantities) > 1:
+                print(f"Error: Inconsistent close quantities for ClosePositionId {close_id}:")
+                for _, r in group.iterrows():
+                    print(f"  OpenPositionId {r['OpenPositionId']}: QuantityClose={r['QuantityClose']}")
+                sys.exit(1)
+
+            total_gain = group["Gain"].sum()
+            trade_close = KDVPSecurityClose(
+                row["Trade Date Close"].date(),
+                row["QuantityClose"],
+                row["Close Price"],
+                0,
+                total_gain < 0,
+            )
+            doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")

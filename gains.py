@@ -81,3 +81,16 @@ class DohKDVP:
         if symbol not in self.items:
             self.items[symbol] = KDVPItem(symbol, is_fond, [])
         self.items[symbol].add_trade(trade)
+
+    def validate_positions(self) -> list[str]:
+        """Check for negative running totals, which indicate unhandled stock splits."""
+        errors = []
+        for symbol, item in self.items.items():
+            for trade in item.securities:
+                if trade.stock < -0.0001:  # tolerance for floating point
+                    trade_type = "sale" if isinstance(trade, KDVPSecurityClose) else "purchase"
+                    errors.append(
+                        f"Negative stock position for {symbol} after {trade_type} "
+                        f"on {trade.date} (position: {trade.stock:.4f})"
+                    )
+        return errors

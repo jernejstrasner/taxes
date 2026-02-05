@@ -9,11 +9,11 @@ from cache import CompanyCache, CountryCache
 from cache_utils import cache_daily
 from currency import Currency
 from finance import FinanceData
-from gains import DohKDVP, KDVPSecurityClose, KDVPSecurityOpen
+from gains import DohKDVP, KDVPSecurityClose
 from ibkr import process_ibkr_xml, ibkr_trades_to_kdvp
 from interest import DohObr
 from revolut import process_revolut_csv
-from saxobank import process_saxo_xlsx
+from saxobank import process_saxo_xlsx, saxo_trades_to_kdvp
 from taxpayer import Taxpayer
 from xml_output import XML, XMLWriter
 from date_utils import parse_pandas_date_column
@@ -232,9 +232,7 @@ def gains(args, taxpayer):
             row["Symbol"] = row["Instrument Symbol"].split(":")[0]
             row["QuantityOpen"] = float(row["Quantity Open"])
             row["QuantityClose"] = abs(float(row["QuantityClose"]))
-            row["Gain"] = (row["QuantityClose"] * row["Close Price"]) - (
-                row["QuantityOpen"] * row["Open Price"]
-            )
+            row["Gain"] = float(row["PnLAccountCurrency"])
             return row
 
         df = df.apply(process_row, axis=1)
@@ -242,23 +240,7 @@ def gains(args, taxpayer):
         print("Number of Saxo trades: ", df.shape[0])
         print("Total Saxo gains: ", df["Gain"].sum())
 
-        for i, row in df.iterrows():
-            trade_open = KDVPSecurityOpen(
-                row["Trade Date Open"].date(),
-                row["QuantityOpen"],
-                row["Open Price"],
-                0,
-                "B",
-            )
-            doh_kdvp.add_trade(row.Symbol, trade_open, row["Asset type"] != "Stock")
-            trade_close = KDVPSecurityClose(
-                row["Trade Date Close"].date(),
-                row["QuantityClose"],
-                row["Close Price"],
-                0,
-                row["Gain"] < 0,
-            )
-            doh_kdvp.add_trade(row.Symbol, trade_close, row["Asset type"] != "Stock")
+        saxo_trades_to_kdvp(df, doh_kdvp)
         trade_count += df.shape[0]
 
     if trade_count == 0:
@@ -267,6 +249,16 @@ def gains(args, taxpayer):
         sys.exit(1)
 
     print(f"Total securities: {len(doh_kdvp.items)}")
+
+    # Validate no security has a negative running total (indicates unhandled stock split)
+    position_errors = doh_kdvp.validate_positions()
+    if position_errors:
+        for error in position_errors:
+            print(f"Error: {error}")
+        print("  This usually indicates an unhandled stock split or corporate action.")
+        print("  The sell quantity exceeds total purchased shares.")
+        print("  Please adjust quantities in your broker export to account for the split.")
+        sys.exit(1)
 
     # Generate the XML structure
     EDP_NS = "http://edavki.durs.si/Documents/Schemas/EDP-Common-1.xsd"

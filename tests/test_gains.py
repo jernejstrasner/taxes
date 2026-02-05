@@ -406,3 +406,98 @@ class TestDohKDVP:
         ), is_fond=True)
 
         assert kdvp.items["FUND1"].is_fond is True
+
+
+class TestValidatePositions:
+    """Tests for negative stock position detection."""
+
+    def test_valid_positions_no_errors(self):
+        kdvp = DohKDVP()
+        kdvp.add_trade("AAPL", KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15), quantity=100,
+            value=150.0, stock=0, acquisition_type="A"
+        ))
+        kdvp.add_trade("AAPL", KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15), quantity=100,
+            value=160.0, stock=0, loss_transfer=False
+        ))
+
+        assert kdvp.validate_positions() == []
+
+    def test_negative_position_returns_error(self):
+        """Selling more than purchased should flag an error."""
+        kdvp = DohKDVP()
+        kdvp.add_trade("XDPD", KDVPSecurityOpen(
+            date=datetime.date(2024, 4, 8), quantity=71,
+            value=70.09, stock=0, acquisition_type="B"
+        ))
+        kdvp.add_trade("XDPD", KDVPSecurityOpen(
+            date=datetime.date(2024, 7, 15), quantity=65,
+            value=75.74, stock=0, acquisition_type="B"
+        ))
+        kdvp.add_trade("XDPD", KDVPSecurityClose(
+            date=datetime.date(2025, 1, 3), quantity=272,
+            value=78.50, stock=0, loss_transfer=False
+        ))
+
+        errors = kdvp.validate_positions()
+        assert len(errors) == 1
+        assert "XDPD" in errors[0]
+        assert "Negative" in errors[0]
+
+    def test_partial_close_no_error(self):
+        kdvp = DohKDVP()
+        kdvp.add_trade("AAPL", KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15), quantity=100,
+            value=150.0, stock=0, acquisition_type="A"
+        ))
+        kdvp.add_trade("AAPL", KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15), quantity=50,
+            value=160.0, stock=0, loss_transfer=False
+        ))
+
+        assert kdvp.validate_positions() == []
+
+    def test_multiple_symbols_one_negative(self):
+        """Only the symbol with negative position should be flagged."""
+        kdvp = DohKDVP()
+        # AAPL: valid
+        kdvp.add_trade("AAPL", KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15), quantity=100,
+            value=150.0, stock=0, acquisition_type="A"
+        ))
+        kdvp.add_trade("AAPL", KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15), quantity=100,
+            value=160.0, stock=0, loss_transfer=False
+        ))
+        # BAD: oversold
+        kdvp.add_trade("BAD", KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15), quantity=10,
+            value=50.0, stock=0, acquisition_type="A"
+        ))
+        kdvp.add_trade("BAD", KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15), quantity=20,
+            value=60.0, stock=0, loss_transfer=False
+        ))
+
+        errors = kdvp.validate_positions()
+        assert len(errors) == 1
+        assert "BAD" in errors[0]
+
+    def test_floating_point_tolerance(self):
+        """Tiny negative values from float arithmetic should not trigger errors."""
+        kdvp = DohKDVP()
+        kdvp.add_trade("AAPL", KDVPSecurityOpen(
+            date=datetime.date(2024, 1, 15), quantity=0.1 + 0.2,
+            value=150.0, stock=0, acquisition_type="A"
+        ))
+        kdvp.add_trade("AAPL", KDVPSecurityClose(
+            date=datetime.date(2024, 2, 15), quantity=0.3,
+            value=160.0, stock=0, loss_transfer=False
+        ))
+
+        assert kdvp.validate_positions() == []
+
+    def test_empty_positions_no_errors(self):
+        kdvp = DohKDVP()
+        assert kdvp.validate_positions() == []
