@@ -68,7 +68,7 @@ def dividends(args, taxpayer, company_cache, country_cache):
 
     finance_data = FinanceData(company_cache)
     symbols = furs_df["Symbol"].unique()
-    finance_data.fetch_info(symbols)
+    finance_data.fetch_addresses(symbols)
 
     def process_row(row):
         # Dividend amount
