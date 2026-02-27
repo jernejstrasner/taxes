@@ -12,6 +12,10 @@
     <isin>US5949181045</isin>
     <address>One Microsoft Way, Redmond, WA, 98052-6399</address>
   </item>
+  <item id="MSF:xetr">
+    <isin>US5949181045</isin>
+    <address>One Microsoft Way, Redmond, WA, 98052-6399</address>
+  </item>
   <item id="CVX:xnys">
     <isin>US1667641005</isin>
     <address>6001 Bollinger Canyon Road, San Ramon, CA, 94583-2324</address>
@@ -104,5 +108,17 @@
   <item id="XDPD:xetr">
     <isin>IE00BGJWX091</isin>
     <address>78 Sir John Rogerson's Quay, Dublin, D02 RK57, Ireland</address>
+  </item>
+  <item id="TCFP:xpar">
+    <isin>FR0000121329</isin>
+    <address>4 rue de la Verrerie, 92190 Meudon, France</address>
+  </item>
+  <item id="ABEC:xetr">
+    <isin>US02079K1079</isin>
+    <address>1600 Amphitheatre Parkway, Mountain View, CA 94043, USA</address>
+  </item>
+  <item id="NVD:xetr">
+    <isin>US67066G1040</isin>
+    <address>2788 San Tomas Expressway, Santa Clara, CA 95051, USA</address>
   </item>
 </cache>
