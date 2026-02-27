@@ -1,5 +1,6 @@
 import argparse
 import sys
+from decimal import Decimal
 
 import pandas as pd
 import requests
@@ -10,6 +11,9 @@ from cache_utils import cache_daily
 from currency import Currency
 from finance import FinanceData
 from gains import DohKDVP, KDVPSecurityClose
+from lot_parser import parse_lots_directory
+from lots import replace_lots_from_historical
+from split_cache import SplitCache
 from ibkr import process_ibkr_xml, ibkr_trades_to_kdvp
 from interest import DohObr
 from revolut import process_revolut_csv
@@ -207,6 +211,9 @@ def gains(args, taxpayer):
         df = parse_pandas_date_column(df, "Trade Date Open", ["%d-%b-%Y"], "trade open date")
         df = parse_pandas_date_column(df, "Trade Date Close", ["%d-%b-%Y"], "trade close date")
 
+        if args.verify_lots:
+            df = replace_lots_from_historical(args.verify_lots, df)
+
         invalid_dates = df[df["Trade Date Close"] < df["Trade Date Open"]]
         if not invalid_dates.empty:
             print("Error: Found trades where close date is before open date:")
@@ -384,6 +391,104 @@ def interest(args, taxpayer):
     print(f"Interest tax report saved to: {output_file}")
 
 
+def show_lots(lots_directory, symbol_filter=None):
+    lots_by_symbol = parse_lots_directory(lots_directory)
+
+    if not lots_by_symbol:
+        print(f"No lot files found in {lots_directory}")
+        return
+
+    if symbol_filter:
+        symbol_filter = symbol_filter.upper()
+        if symbol_filter not in lots_by_symbol:
+            print(f"No lots found for symbol: {symbol_filter}")
+            print(f"Available symbols: {', '.join(sorted(lots_by_symbol.keys()))}")
+            return
+        lots_by_symbol = {symbol_filter: lots_by_symbol[symbol_filter]}
+
+    # Collect all open dates for currency conversion
+    all_dates = []
+    for lots in lots_by_symbol.values():
+        for lot in lots:
+            all_dates.append(lot.open_date)
+
+    currency = Currency(all_dates, ["USD"])
+    split_cache = SplitCache()
+
+    grand_total_usd = 0
+    grand_total_eur = 0
+    grand_total_shares = 0
+    grand_total_adj_shares = 0
+
+    for symbol in sorted(lots_by_symbol.keys()):
+        lots = lots_by_symbol[symbol]
+
+        # Get total split ratio for this symbol
+        earliest = min(lot.open_date for lot in lots)
+        splits = split_cache.get_splits_in_range(symbol, earliest, pd.Timestamp.now().date())
+        total_split_ratio = Decimal("1")
+        for split in splits:
+            total_split_ratio *= split.ratio
+
+        split_label = ""
+        if splits:
+            split_details = ", ".join(
+                f"{s.ratio:.0f}:1 ({s.date})" for s in sorted(splits, key=lambda s: s.date)
+            )
+            split_label = f" — splits: {split_details} = {total_split_ratio:.0f}:1 total"
+
+        print(f"\n{symbol}{split_label}")
+        print(f"  {'Date':<12} {'Qty':>6} {'Now':>7} {'$/shr':>9} {'adj$/s':>8} {'Basis $':>11} {'Rate':>8} {'\u20ac/shr':>9} {'adj\u20ac/s':>8} {'Basis \u20ac':>11}")
+        print(f"  {'-'*12} {'-'*6} {'-'*7} {'-'*9} {'-'*8} {'-'*11} {'-'*8} {'-'*9} {'-'*8} {'-'*11}")
+
+        sym_total_usd = 0
+        sym_total_eur = 0
+        sym_total_shares = 0
+        sym_total_adj_shares = 0
+
+        for lot in sorted(lots, key=lambda x: x.open_date):
+            rate = currency.get_rate(lot.open_date, "USD")
+            price_eur = float(lot.cost_per_share) / rate
+            basis_eur = float(lot.cost_basis) / rate
+
+            # Adjusted quantity based on splits after this lot's open date
+            lot_splits = split_cache.get_splits_in_range(symbol, lot.open_date, pd.Timestamp.now().date())
+            lot_ratio = Decimal("1")
+            for split in lot_splits:
+                lot_ratio *= split.ratio
+            adj_qty = lot.quantity * lot_ratio
+            adj_price = lot.cost_per_share / lot_ratio
+
+            print(
+                f"  {lot.open_date}  {lot.quantity:>5}"
+                f"  {int(adj_qty):>7}"
+                f"  ${float(lot.cost_per_share):>7.2f}"
+                f"  ${float(adj_price):>6.2f}"
+                f"  ${float(lot.cost_basis):>9.2f}"
+                f"  {rate:>7.4f}"
+                f"  \u20ac{price_eur:>7.2f}"
+                f"  \u20ac{price_eur / float(lot_ratio):>6.2f}"
+                f"  \u20ac{basis_eur:>9.2f}"
+            )
+
+            sym_total_usd += float(lot.cost_basis)
+            sym_total_eur += basis_eur
+            sym_total_shares += int(lot.quantity)
+            sym_total_adj_shares += int(adj_qty)
+
+        print(f"  {'Total':<12} {sym_total_shares:>5} {int(sym_total_adj_shares):>7}           ${sym_total_usd:>9.2f}                    \u20ac{sym_total_eur:>9.2f}")
+
+        grand_total_usd += sym_total_usd
+        grand_total_eur += sym_total_eur
+        grand_total_shares += sym_total_shares
+        grand_total_adj_shares += sym_total_adj_shares
+
+    split_cache.flush()
+
+    print(f"\n{'='*90}")
+    print(f"  Grand total: {grand_total_shares} shares ({grand_total_adj_shares} adj), ${grand_total_usd:,.2f} USD, \u20ac{grand_total_eur:,.2f} EUR")
+
+
 @cache_daily("currency.cache")
 def download_currency():
     print("Downloading latest currency data...")
@@ -417,15 +522,24 @@ def main():
     group.add_argument("--dividends", action="store_true")
     group.add_argument("--gains", action="store_true")
     group.add_argument("--interest", action="store_true")
+    group.add_argument(
+        "--show-lots",
+        help="Directory with historical lot CSVs to display with EUR conversions",
+    )
     parser.add_argument(
         "--condensed",
         action="store_true",
         help="Condenses interest to one entry per payer",
     )
 
+    parser.add_argument("--symbol", help="Filter by symbol (for --show-lots)")
     parser.add_argument("--saxo", help="Path to the Saxobank xlsx file")
     parser.add_argument("--revolut", help="Path to the Revolut tax summary csv file")
     parser.add_argument("--ibkr", help="Path to the IBKR Flex Query XML file")
+    parser.add_argument(
+        "--verify-lots",
+        help="Directory with historical lot CSVs to verify against (for --gains --saxo)",
+    )
 
     parser.add_argument(
         "--additional-info",
@@ -450,6 +564,12 @@ def main():
         "--taxpayer", help="Path to the taxpayer xml file", required=False
     )
     args = parser.parse_args()
+
+    # Show lots doesn't need taxpayer, schemas, etc.
+    if args.show_lots:
+        download_currency()
+        show_lots(args.show_lots, args.symbol)
+        return
 
     # Download fresh currency data if needed
     download_currency()
